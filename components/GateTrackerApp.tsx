@@ -6,6 +6,7 @@ import { RoadToGate, MONTHS } from "./RoadToGate";
 import { MonthlyProgressCard } from "./MonthlyProgressCard";
 import { MonthlySubjectsCard, Subject } from "./MonthlySubjectsCard";
 import { AddSubjectModal } from "./AddSubjectModal";
+import { AuthModal } from "./AuthModal";
 
 interface GateTrackerAppProps {
   initialSubjects: Subject[];
@@ -15,8 +16,10 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
   const [subjects, setSubjects] = useState<Subject[]>(initialSubjects);
   const [selectedMonth, setSelectedMonth] = useState<string>("2026-11");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<"signin" | "signup">("signin");
 
-  // Sync latest data from API
+  // Sync latest data from Neon Postgres API
   const refreshData = useCallback(async () => {
     try {
       const res = await fetch("/api/tracker");
@@ -27,7 +30,7 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
         }
       }
     } catch (err) {
-      console.error("Failed to refresh tracker data:", err);
+      console.error("Failed to refresh tracker data from database:", err);
     }
   }, []);
 
@@ -41,19 +44,14 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
     return subjects.filter((s) => s.monthly_plans.some((p) => p.month === selectedMonth));
   }, [subjects, selectedMonth]);
 
-  // Calculate stats for all months (for the Road to GATE milestones)
+  // Calculate stats for all months (for the Road to GATE milestones) - strictly from database records
   const monthlyStats = useMemo(() => {
     const stats: Record<string, { total: number; completed: number; percent: number; planned: boolean }> = {};
 
     MONTHS.forEach((m) => {
       const subs = subjects.filter((s) => s.monthly_plans.some((p) => p.month === m.id));
       if (subs.length === 0) {
-        // Special case for October mockup display (history)
-        if (m.id === "2026-10") {
-          stats[m.id] = { total: 100, completed: 82, percent: 82, planned: true };
-        } else {
-          stats[m.id] = { total: 0, completed: 0, percent: 0, planned: false };
-        }
+        stats[m.id] = { total: 0, completed: 0, percent: 0, planned: false };
       } else {
         const total = subs.reduce((acc, curr) => acc + curr.total_lectures, 0);
         const completed = subs.reduce((acc, curr) => acc + curr.completed_lectures, 0);
@@ -65,18 +63,8 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
     return stats;
   }, [subjects]);
 
-  // Calculate stats specifically for the selected month's cards
+  // Calculate stats specifically for the selected month's cards - strictly from database records
   const selectedStats = useMemo(() => {
-    // If October and empty, use mock numbers
-    if (selectedMonth === "2026-10" && monthSubjects.length === 0) {
-      return {
-        total: 100,
-        completed: 82,
-        urgentRemaining: 0,
-        daysRemaining: 0,
-      };
-    }
-
     const total = monthSubjects.reduce((acc, curr) => acc + curr.total_lectures, 0);
     const completed = monthSubjects.reduce((acc, curr) => acc + curr.completed_lectures, 0);
 
@@ -91,10 +79,11 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
       return acc + rem;
     }, 0);
 
-    // Calculate days remaining based on month
+    // Dynamic days remaining based on month
     let daysRemaining = 30;
-    if (selectedMonth === "2026-11") {
-      // November 2026: Reference date Nov 20 -> 10 days left (matching mockup 25/10 = 2.5/day!)
+    if (selectedMonth === "2026-10") {
+      daysRemaining = 0; // October has already passed
+    } else if (selectedMonth === "2026-11") {
       daysRemaining = 10;
     } else if (selectedMonth === "2026-12") {
       daysRemaining = 31;
@@ -290,7 +279,14 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
   return (
     <div className="min-h-screen pb-16 px-3 sm:px-6">
       {/* Top Header */}
-      <Header currentDateText="Nov 18, 2026" />
+      <Header
+        currentDateText="Nov 18, 2026"
+        onOpenAuthModal={(mode = "signin") => {
+          setAuthModalMode(mode);
+          setIsAuthModalOpen(true);
+        }}
+        onRefreshData={refreshData}
+      />
 
       {/* Main Content */}
       <main className="w-full max-w-5xl mx-auto flex flex-col gap-6 sm:gap-8">
@@ -339,6 +335,14 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
         initialMonth={selectedMonth}
         onClose={() => setIsAddModalOpen(false)}
         onCreate={handleCreateSubject}
+      />
+
+      {/* Neon Auth Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        initialMode={authModalMode}
+        onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={refreshData}
       />
     </div>
   );
