@@ -97,6 +97,7 @@ export async function POST(request: NextRequest) {
         month,
         isUrgent = false,
         isCompleted = false,
+        date,
       } = body;
       const id = "sub-" + Date.now() + "-" + Math.random().toString(36).substring(2, 6);
       const isComp = Boolean(isCompleted || Number(completedLectures) >= Number(totalLectures));
@@ -109,9 +110,10 @@ export async function POST(request: NextRequest) {
 
       if (finalCompleted > 0) {
         const logId = "log-init-" + id;
+        const targetDate = (date && typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date)) ? date : null;
         await sql`
           INSERT INTO lecture_logs (id, subject_id, lectures_completed, log_date, created_at)
-          VALUES (${logId}, ${id}, ${finalCompleted}, CURRENT_DATE, NOW())
+          VALUES (${logId}, ${id}, ${finalCompleted}, COALESCE(${targetDate}::date, (NOW() AT TIME ZONE 'Asia/Kolkata')::date), NOW())
         `;
       }
 
@@ -128,57 +130,80 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "toggle_subject_completed") {
-      const { subjectId, completed } = body;
+      const { subjectId, completed, date } = body;
       const isComp = Boolean(completed);
 
-      await sql`
-        UPDATE subjects 
-        SET is_completed = ${isComp},
-            completed_lectures = CASE 
-              WHEN ${isComp} THEN total_lectures 
-              WHEN completed_lectures >= total_lectures THEN 0 
-              ELSE completed_lectures 
-            END
-        WHERE id = ${subjectId} AND user_id = ${userId}
-      `;
-
-      const updated = await sql`
-        SELECT id, title, completed_lectures, total_lectures, is_completed 
-        FROM subjects 
-        WHERE id = ${subjectId} AND user_id = ${userId}
-      `;
-
-      return NextResponse.json({ status: "ok", subject: updated[0] });
-    }
-
-    if (action === "log_lecture") {
-      const { subjectId, delta = 1 } = body;
-      
-      // Update subject completed lectures clamped between 0 and total_lectures
-      await sql`
-        UPDATE subjects 
-        SET completed_lectures = GREATEST(0, LEAST(total_lectures, completed_lectures + ${Number(delta)})),
-            is_completed = CASE 
-              WHEN GREATEST(0, LEAST(total_lectures, completed_lectures + ${Number(delta)})) >= total_lectures THEN TRUE 
-              ELSE FALSE 
-            END
-        WHERE id = ${subjectId} AND user_id = ${userId}
-      `;
-
-      // Also record in lecture logs
-      const logId = "log-" + Date.now() + "-" + Math.random().toString(36).substring(2, 6);
-      await sql`
-        INSERT INTO lecture_logs (id, subject_id, lectures_completed)
-        VALUES (${logId}, ${subjectId}, ${Number(delta)})
-      `;
-
-      const updated = await sql`
+      const current = await sql`
         SELECT completed_lectures, total_lectures 
         FROM subjects 
         WHERE id = ${subjectId} AND user_id = ${userId}
       `;
+      if (current.length === 0) {
+        return NextResponse.json({ status: "error", error: "Subject not found" }, { status: 404 });
+      }
 
-      return NextResponse.json({ status: "ok", subject: updated[0] });
+      const sub = current[0];
+      const oldCompleted = Number(sub.completed_lectures);
+      const total = Number(sub.total_lectures);
+      const newCompleted = isComp ? total : (oldCompleted >= total ? 0 : oldCompleted);
+
+      await sql`
+        UPDATE subjects 
+        SET is_completed = ${isComp},
+            completed_lectures = ${newCompleted}
+        WHERE id = ${subjectId} AND user_id = ${userId}
+      `;
+
+      const diff = newCompleted - oldCompleted;
+      if (diff !== 0) {
+        const targetDate = (date && typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date)) ? date : null;
+        const logId = "log-toggle-" + Date.now() + "-" + Math.random().toString(36).substring(2, 6);
+        await sql`
+          INSERT INTO lecture_logs (id, subject_id, lectures_completed, log_date, created_at)
+          VALUES (${logId}, ${subjectId}, ${diff}, COALESCE(${targetDate}::date, (NOW() AT TIME ZONE 'Asia/Kolkata')::date), NOW())
+        `;
+      }
+
+      return NextResponse.json({ status: "ok", completedLectures: newCompleted });
+    }
+
+    if (action === "log_lecture") {
+      const { subjectId, delta = 1, date } = body;
+      const numDelta = Number(delta);
+
+      const current = await sql`
+        SELECT completed_lectures, total_lectures 
+        FROM subjects 
+        WHERE id = ${subjectId} AND user_id = ${userId}
+      `;
+      if (current.length === 0) {
+        return NextResponse.json({ status: "error", error: "Subject not found" }, { status: 404 });
+      }
+
+      const sub = current[0];
+      const oldCompleted = Number(sub.completed_lectures);
+      const total = Number(sub.total_lectures);
+      const newCompleted = Math.max(0, Math.min(total, oldCompleted + numDelta));
+      const actualDelta = newCompleted - oldCompleted;
+
+      if (actualDelta !== 0) {
+        const isComp = newCompleted >= total;
+        await sql`
+          UPDATE subjects 
+          SET completed_lectures = ${newCompleted},
+              is_completed = ${isComp}
+          WHERE id = ${subjectId} AND user_id = ${userId}
+        `;
+
+        const targetDate = (date && typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date)) ? date : null;
+        const logId = "log-" + Date.now() + "-" + Math.random().toString(36).substring(2, 6);
+        await sql`
+          INSERT INTO lecture_logs (id, subject_id, lectures_completed, log_date, created_at)
+          VALUES (${logId}, ${subjectId}, ${actualDelta}, COALESCE(${targetDate}::date, (NOW() AT TIME ZONE 'Asia/Kolkata')::date), NOW())
+        `;
+      }
+
+      return NextResponse.json({ status: "ok", completedLectures: newCompleted });
     }
 
     if (action === "toggle_urgent") {
@@ -229,7 +254,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "update_subject") {
-      const { subjectId, title, icon, totalLectures, completedLectures, teacher } = body;
+      const { subjectId, title, icon, totalLectures, completedLectures, teacher, date } = body;
       const newTotal = parseInt(String(totalLectures), 10);
       if (!subjectId || isNaN(newTotal) || newTotal < 1) {
         return NextResponse.json(
@@ -248,7 +273,8 @@ export async function POST(request: NextRequest) {
       }
 
       const existing = current[0];
-      const reqCompleted = completedLectures !== undefined ? parseInt(String(completedLectures), 10) : Number(existing.completed_lectures);
+      const oldCompleted = Number(existing.completed_lectures);
+      const reqCompleted = completedLectures !== undefined ? parseInt(String(completedLectures), 10) : oldCompleted;
       const newCompleted = Math.max(0, Math.min(newTotal, isNaN(reqCompleted) ? 0 : reqCompleted));
       const isComp = newCompleted >= newTotal;
       const newTitle = title ? String(title).trim() : existing.title;
@@ -265,6 +291,17 @@ export async function POST(request: NextRequest) {
             teacher = ${newTeacher}
         WHERE id = ${subjectId} AND user_id = ${userId}
       `;
+
+      // Log difference in lecture_logs so history reflects user's actual progress
+      const diff = newCompleted - oldCompleted;
+      if (diff !== 0) {
+        const targetDate = (date && typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date)) ? date : null;
+        const logId = "log-edit-" + Date.now() + "-" + Math.random().toString(36).substring(2, 6);
+        await sql`
+          INSERT INTO lecture_logs (id, subject_id, lectures_completed, log_date, created_at)
+          VALUES (${logId}, ${subjectId}, ${diff}, COALESCE(${targetDate}::date, (NOW() AT TIME ZONE 'Asia/Kolkata')::date), NOW())
+        `;
+      }
 
       return NextResponse.json({ status: "ok" });
     }

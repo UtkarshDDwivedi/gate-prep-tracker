@@ -26,29 +26,43 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Check if any subjects have completed_lectures > 0 but no logs yet, and backfill
-    const subjectsNeedingLogs = await sql`
-      SELECT s.id, s.completed_lectures, s.created_at 
+    const { searchParams } = new URL(request.url);
+    const tzParam = searchParams.get("tz") || "Asia/Kolkata";
+    const safeTz = /^[A-Za-z0-9_/+-]+$/.test(tzParam) ? tzParam : "Asia/Kolkata";
+
+    // Check if any subjects have discrepancies between completed_lectures and lecture_logs
+    const subjectsDiscrepancies = await sql`
+      SELECT s.id, s.completed_lectures, s.created_at, COALESCE(SUM(l.lectures_completed), 0)::int as logged_sum
       FROM subjects s
       LEFT JOIN lecture_logs l ON s.id = l.subject_id
-      WHERE s.user_id = ${userId} AND s.completed_lectures > 0
+      WHERE s.user_id = ${userId}
       GROUP BY s.id, s.completed_lectures, s.created_at
-      HAVING COUNT(l.id) = 0
+      HAVING COALESCE(SUM(l.lectures_completed), 0) != s.completed_lectures
     `;
 
-    for (const sub of subjectsNeedingLogs) {
-      const logId = "log-init-" + sub.id;
-      await sql`
-        INSERT INTO lecture_logs (id, subject_id, lectures_completed, log_date, created_at)
-        VALUES (${logId}, ${sub.id}, ${Number(sub.completed_lectures)}, ${sub.created_at}::date, ${sub.created_at})
-        ON CONFLICT DO NOTHING
-      `;
+    for (const sub of subjectsDiscrepancies) {
+      const diff = Number(sub.completed_lectures) - Number(sub.logged_sum);
+      if (diff !== 0) {
+        const isBackfill = Number(sub.logged_sum) === 0;
+        const logId = (isBackfill ? "log-init-" : "log-sync-") + sub.id + "-" + Date.now();
+        if (isBackfill) {
+          await sql`
+            INSERT INTO lecture_logs (id, subject_id, lectures_completed, log_date, created_at)
+            VALUES (${logId}, ${sub.id}, ${diff}, (${sub.created_at}::timestamptz AT TIME ZONE ${safeTz})::date, ${sub.created_at})
+          `;
+        } else {
+          await sql`
+            INSERT INTO lecture_logs (id, subject_id, lectures_completed, log_date, created_at)
+            VALUES (${logId}, ${sub.id}, ${diff}, (NOW() AT TIME ZONE ${safeTz})::date, NOW())
+          `;
+        }
+      }
     }
 
-    // Query daily logs grouped by date and subject
+    // Query daily logs grouped by local calendar date and subject
     const rawLogs = await sql`
       SELECT 
-        COALESCE(TO_CHAR(l.log_date, 'YYYY-MM-DD'), TO_CHAR(l.created_at, 'YYYY-MM-DD')) as date_str,
+        TO_CHAR(COALESCE(l.log_date, (l.created_at AT TIME ZONE ${safeTz})::date), 'YYYY-MM-DD') as date_str,
         l.subject_id,
         s.title as subject_title,
         s.icon as subject_icon,

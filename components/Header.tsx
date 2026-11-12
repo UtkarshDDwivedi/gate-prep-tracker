@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Calendar as CalendarIcon, LogOut, LogIn, Clock, BookOpen } from "lucide-react";
 import { authClient } from "@/lib/auth/client";
@@ -12,15 +12,39 @@ interface HeaderProps {
   onRefreshData?: () => void;
 }
 
+const emptySubscribe = () => () => {};
+
 export function Header({
-  currentDateText = "Nov 12, 2026",
-  compactDateText = "Nov 12",
+  currentDateText,
+  compactDateText,
   onOpenAuthModal,
   onRefreshData,
 }: HeaderProps) {
+  const dateInfo = useSyncExternalStore(
+    emptySubscribe,
+    () => {
+      const now = new Date();
+      return {
+        full: now.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }),
+        compact: now.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        }),
+      };
+    },
+    () => ({ full: "Nov 13, 2026", compact: "Nov 13" })
+  );
+
   const [showAuthMenu, setShowAuthMenu] = useState(false);
   const session = authClient.useSession();
   const user = session.data?.user;
+
+  const displayFullDate = currentDateText || dateInfo.full;
+  const displayCompactDate = compactDateText || dateInfo.compact;
 
   useEffect(() => {
     if (!showAuthMenu) return;
@@ -109,8 +133,8 @@ export function Header({
         {/* Date Pill - Compact on Mobile, Full on Desktop */}
         <div className="px-2.5 py-1 sm:px-4 sm:py-1.5 rounded-full border-2 border-zinc-800 bg-white font-bold text-xs sm:text-sm text-zinc-800 shadow-xs flex items-center gap-1 sm:gap-1.5 font-display shrink-0">
           <CalendarIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-zinc-700 shrink-0" />
-          <span className="sm:hidden">{compactDateText}</span>
-          <span className="hidden sm:inline">{currentDateText}</span>
+          <span className="sm:hidden">{displayCompactDate}</span>
+          <span className="hidden sm:inline">{displayFullDate}</span>
         </div>
 
         {/* User Profile Avatar with Neon Auth indicator or Sign In Button */}

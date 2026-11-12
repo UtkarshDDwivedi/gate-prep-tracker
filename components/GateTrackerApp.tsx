@@ -13,6 +13,14 @@ interface GateTrackerAppProps {
   initialSubjects: Subject[];
 }
 
+function getClientLocalDate(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
   const [subjects, setSubjects] = useState<Subject[]>(initialSubjects);
   const [selectedMonth, setSelectedMonth] = useState<string>("2026-11");
@@ -20,21 +28,6 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<"signin" | "signup">("signin");
   const [authPromptMessage, setAuthPromptMessage] = useState<string | null>(null);
-
-  // Real-time formatted date for header display (full on desktop, compact on mobile)
-  const dateInfo = useMemo(() => {
-    const now = new Date();
-    const full = now.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-    const compact = now.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
-    return { full, compact };
-  }, []);
 
   const session = authClient.useSession();
   const isAuthenticated = Boolean(session.data?.user);
@@ -179,6 +172,7 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
           action: "log_lecture",
           subjectId,
           delta,
+          date: getClientLocalDate(),
         }),
       });
     } catch (err) {
@@ -250,6 +244,7 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
         body: JSON.stringify({
           action: "create_subject",
           ...data,
+          date: getClientLocalDate(),
         }),
       });
 
@@ -398,6 +393,7 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
           teacher,
           totalLectures,
           completedLectures,
+          date: getClientLocalDate(),
         }),
       });
     } catch (err) {
@@ -410,8 +406,6 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
     <div className="min-h-screen pb-16 px-3 sm:px-6">
       {/* Top Header */}
       <Header
-        currentDateText={dateInfo.full}
-        compactDateText={dateInfo.compact}
         onOpenAuthModal={(mode = "signin") => {
           setAuthModalMode(mode);
           setIsAuthModalOpen(true);

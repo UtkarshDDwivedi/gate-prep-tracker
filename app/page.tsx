@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth/server";
 import { GateTrackerApp } from "@/components/GateTrackerApp";
 import { Subject } from "@/components/MonthlySubjectsCard";
 
+
+
 export const instant = false;
 
 export default async function Home() {

@@ -100,7 +100,8 @@ export default function HistoryPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/history");
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Kolkata";
+      const res = await fetch(`/api/history?tz=${encodeURIComponent(tz)}`, { cache: "no-store" });
       const data = await res.json();
       if (data.status === "ok") {
         setDays(data.days || []);
@@ -119,7 +120,8 @@ export default function HistoryPage() {
     let ignore = false;
     async function load() {
       try {
-        const res = await fetch("/api/history");
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Kolkata";
+        const res = await fetch(`/api/history?tz=${encodeURIComponent(tz)}`, { cache: "no-store" });
         const data = await res.json();
         if (!ignore && data.status === "ok") {
           setDays(data.days || []);

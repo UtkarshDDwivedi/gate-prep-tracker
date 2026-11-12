@@ -64,6 +64,14 @@ const CARD_THEMES = [
   },
 ];
 
+function getClientLocalDate(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export default function SubjectsPage() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
@@ -190,6 +198,7 @@ export default function SubjectsPage() {
           action: "toggle_subject_completed",
           subjectId: subject.id,
           completed: nextCompleted,
+          date: getClientLocalDate(),
         }),
       });
     } catch (err) {
@@ -245,6 +254,7 @@ export default function SubjectsPage() {
           teacher,
           totalLectures,
           completedLectures,
+          date: getClientLocalDate(),
         }),
       });
     } catch (err) {
@@ -275,6 +285,7 @@ export default function SubjectsPage() {
         body: JSON.stringify({
           action: "create_subject",
           ...data,
+          date: getClientLocalDate(),
         }),
       });
 
