@@ -86,20 +86,20 @@ export function Header({
 
       {/* Right Controls: Subjects + History + Date Pill & User Avatar / Sign In */}
       <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-        {/* Subjects Page Link Button */}
+        {/* Subjects Page Link Button (Desktop only, mobile accesses via profile dialog) */}
         <Link
           href="/subjects"
-          className="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full border-2 border-zinc-800 bg-white hover:bg-emerald-50 hover:border-emerald-500 font-bold text-xs sm:text-sm text-zinc-800 shadow-xs flex items-center gap-1 sm:gap-1.5 font-display shrink-0 transition-all active:scale-95"
+          className="hidden sm:flex px-3.5 py-1.5 rounded-full border-2 border-zinc-800 bg-white hover:bg-emerald-50 hover:border-emerald-500 font-bold text-sm text-zinc-800 shadow-xs items-center gap-1.5 font-display shrink-0 transition-all active:scale-95"
           title="View all GATE syllabus subjects"
         >
           <BookOpen className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
           <span>Subjects</span>
         </Link>
 
-        {/* History Page Link Button */}
+        {/* History Page Link Button (Desktop only, mobile accesses via profile dialog) */}
         <Link
           href="/history"
-          className="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full border-2 border-zinc-800 bg-white hover:bg-amber-50 hover:border-amber-500 font-bold text-xs sm:text-sm text-zinc-800 shadow-xs flex items-center gap-1 sm:gap-1.5 font-display shrink-0 transition-all active:scale-95"
+          className="hidden sm:flex px-3.5 py-1.5 rounded-full border-2 border-zinc-800 bg-white hover:bg-amber-50 hover:border-amber-500 font-bold text-sm text-zinc-800 shadow-xs items-center gap-1.5 font-display shrink-0 transition-all active:scale-95"
           title="View your daily lecture history"
         >
           <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
