@@ -21,6 +21,15 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
   const [authModalMode, setAuthModalMode] = useState<"signin" | "signup">("signin");
   const [authPromptMessage, setAuthPromptMessage] = useState<string | null>(null);
 
+  // Real-time formatted date for header display
+  const currentDateText = useMemo(() => {
+    return new Date().toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  }, []);
+
   const session = authClient.useSession();
   const isAuthenticated = Boolean(session.data?.user);
 
@@ -104,18 +113,31 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
       return acc + rem;
     }, 0);
 
-    // Dynamic days remaining based on month
-    let daysRemaining = 30;
-    if (selectedMonth === "2026-10") {
-      daysRemaining = 0; // October has already passed
-    } else if (selectedMonth === "2026-11") {
-      daysRemaining = 10;
-    } else if (selectedMonth === "2026-12") {
-      daysRemaining = 31;
-    } else if (selectedMonth === "2027-01") {
-      daysRemaining = 31;
-    } else if (selectedMonth === "2027-02") {
-      daysRemaining = 7; // Cutoff first week of Feb
+    // Real-time dynamic days remaining calculation
+    const [targetYear, targetMonth] = selectedMonth.split("-").map(Number);
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth() + 1; // 1-based (Jan = 1, Nov = 11)
+    const currentDay = today.getDate();
+
+    let daysRemaining = 0;
+
+    if (targetYear < currentYear || (targetYear === currentYear && targetMonth < currentMonth)) {
+      // Past month (e.g. October) has already concluded
+      daysRemaining = 0;
+    } else if (targetYear === currentYear && targetMonth === currentMonth) {
+      // Active current month: remaining days from today through end of month (inclusive)
+      const totalDaysInMonth = new Date(targetYear, targetMonth, 0).getDate();
+      daysRemaining = Math.max(1, totalDaysInMonth - currentDay + 1);
+    } else {
+      // Future month
+      if (selectedMonth.endsWith("-02")) {
+        // February GATE cutoff (first week of Feb until exam date)
+        daysRemaining = 7;
+      } else {
+        // Full future month (e.g. December = 31 days, January = 31 days)
+        daysRemaining = new Date(targetYear, targetMonth, 0).getDate();
+      }
     }
 
     return {
@@ -329,7 +351,7 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
     <div className="min-h-screen pb-16 px-3 sm:px-6">
       {/* Top Header */}
       <Header
-        currentDateText="Nov 18, 2026"
+        currentDateText={currentDateText}
         onOpenAuthModal={(mode = "signin") => {
           setAuthModalMode(mode);
           setIsAuthModalOpen(true);
