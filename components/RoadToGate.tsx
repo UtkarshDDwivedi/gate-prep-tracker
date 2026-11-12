@@ -76,7 +76,7 @@ export function RoadToGate({ selectedMonth, onSelectMonth, monthlyStats }: RoadT
       </div>
 
       {/* Outer Card Container */}
-      <div className="relative w-full overflow-hidden rounded-3xl bg-linear-to-b from-[#F9F7F1] via-[#F3F8F2] to-[#E9F5E8] border-2 border-zinc-800/80 shadow-[0_4px_20px_rgba(0,0,0,0.06)] min-h-[250px] sm:min-h-[290px] select-none">
+      <div className="relative w-full overflow-hidden rounded-3xl bg-linear-to-b from-[#F9F7F1] via-[#F3F8F2] to-[#E9F5E8] border-2 border-zinc-800/80 shadow-[0_4px_20px_rgba(0,0,0,0.06)] min-h-[275px] sm:min-h-[300px] select-none">
         {/* Left Arrow Button (Retained on Desktop, Hidden on Mobile) */}
         <button
           onClick={handlePrev}
@@ -102,7 +102,7 @@ export function RoadToGate({ selectedMonth, onSelectMonth, monthlyStats }: RoadT
           ref={scrollContainerRef}
           className="w-full overflow-x-auto md:overflow-x-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] touch-pan-x cursor-grab active:cursor-grabbing"
         >
-          <div className="relative min-w-[760px] md:min-w-full w-full min-h-[250px] sm:min-h-[290px] p-4 sm:p-6 flex items-center justify-between">
+          <div className="relative min-w-[880px] md:min-w-full w-full min-h-[275px] sm:min-h-[300px] p-4 sm:p-6 flex items-center justify-between">
             {/* Fluffy sketched clouds */}
             <div className="absolute top-4 left-16 opacity-60 pointer-events-none">
               <svg width="64" height="32" viewBox="0 0 64 32" fill="none">
@@ -185,7 +185,7 @@ export function RoadToGate({ selectedMonth, onSelectMonth, monthlyStats }: RoadT
                         monthRefs.current[month.id] = el;
                       }}
                       onClick={() => onSelectMonth(month.id)}
-                      className="flex flex-col items-center cursor-pointer group shrink-0 px-2"
+                      className="flex flex-col items-center cursor-pointer group shrink-0 px-3"
                     >
                       {/* Flagpole & Peak */}
                       <motion.div
@@ -195,9 +195,9 @@ export function RoadToGate({ selectedMonth, onSelectMonth, monthlyStats }: RoadT
                       >
                         {/* Golden Flag */}
                         <div className="relative -mb-1 flex items-start">
-                          <div className="w-1.5 h-12 bg-zinc-800 rounded-full" />
+                          <div className="w-1.5 h-14 bg-zinc-800 rounded-full" />
                           <motion.div
-                            className="bg-amber-400 border-2 border-zinc-800 text-zinc-900 font-bold text-xs px-2 py-1 rounded-sm shadow-md origin-left -ml-0.5"
+                            className="bg-amber-400 border-2 border-zinc-800 text-zinc-900 font-bold text-sm px-2.5 py-1 rounded-sm shadow-md origin-left -ml-0.5"
                             animate={{ rotate: [-2, 4, -2] }}
                             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                           >
@@ -207,7 +207,7 @@ export function RoadToGate({ selectedMonth, onSelectMonth, monthlyStats }: RoadT
 
                         {/* Mountain Graphic */}
                         <svg
-                          className="w-24 h-18 sm:w-[120px] sm:h-[90px] -mt-2 sm:-mt-3"
+                          className="w-28 h-20 sm:w-[130px] sm:h-[95px] -mt-2 sm:-mt-3"
                           viewBox="0 0 120 90"
                           fill="none"
                         >
@@ -231,9 +231,9 @@ export function RoadToGate({ selectedMonth, onSelectMonth, monthlyStats }: RoadT
                           <line x1="60" y1="8" x2="60" y2="88" stroke="#059669" strokeWidth="2" strokeDasharray="3 3" />
                         </svg>
 
-                        {/* February GATE Sign Card - Enlarged on Mobile */}
+                        {/* February GATE Sign Card - Enlarged */}
                         <div
-                          className={`-mt-3 sm:-mt-4 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-2xl border-2 border-zinc-800 font-extrabold text-xs sm:text-sm shadow-md transition-all text-center min-w-[95px] sm:min-w-[110px] ${
+                          className={`-mt-3 sm:-mt-4 px-4 py-2 sm:px-5 sm:py-2.5 rounded-2xl border-2 border-zinc-800 font-extrabold text-sm sm:text-base shadow-md transition-all text-center min-w-[115px] sm:min-w-[130px] ${
                             isSelected
                               ? "bg-amber-300 text-zinc-950 scale-105 ring-4 ring-amber-400/40 ring-offset-1"
                               : "bg-white text-zinc-800 group-hover:bg-amber-50"
@@ -241,7 +241,7 @@ export function RoadToGate({ selectedMonth, onSelectMonth, monthlyStats }: RoadT
                         >
                           <span className="font-display">February</span>
                           <br />
-                          <span className="text-emerald-700 font-black text-[11px] sm:text-xs uppercase tracking-wider">
+                          <span className="text-emerald-700 font-black text-xs sm:text-sm uppercase tracking-wider">
                             GATE! 🎯
                           </span>
                         </div>
@@ -250,7 +250,7 @@ export function RoadToGate({ selectedMonth, onSelectMonth, monthlyStats }: RoadT
                   );
                 }
 
-                // Normal month signpost - Enlarged Chunky Buttons on Mobile
+                // Normal month signpost - Extra Large Chunky Tactile Buttons
                 return (
                   <motion.div
                     key={month.id}
@@ -258,22 +258,22 @@ export function RoadToGate({ selectedMonth, onSelectMonth, monthlyStats }: RoadT
                       monthRefs.current[month.id] = el;
                     }}
                     onClick={() => onSelectMonth(month.id)}
-                    className="flex flex-col items-center cursor-pointer select-none group shrink-0 px-2"
+                    className="flex flex-col items-center cursor-pointer select-none group shrink-0 px-3"
                     whileHover={{ y: -4 }}
-                    whileTap={{ scale: 0.96 }}
+                    whileTap={{ scale: 0.95 }}
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
                   >
-                    {/* Signpost Board - Big, chunky and prominent on mobile */}
+                    {/* Signpost Board - Extra Large and Chunky */}
                     <div
-                      className={`relative px-4 py-2 sm:px-6 sm:py-2.5 rounded-2xl border-2 transition-all shadow-[2px_3px_0px_rgba(0,0,0,0.15)] flex flex-col items-center min-w-[105px] sm:min-w-[125px] ${
+                      className={`relative px-5 py-2.5 sm:px-6 sm:py-3 rounded-2xl border-2 transition-all shadow-[3px_4px_0px_rgba(0,0,0,0.15)] flex flex-col items-center min-w-[125px] sm:min-w-[140px] ${
                         isSelected
-                          ? "bg-white border-emerald-600 scale-105 ring-4 ring-emerald-500/25 shadow-[0_4px_12px_rgba(16,185,129,0.25)]"
+                          ? "bg-white border-emerald-600 scale-105 ring-4 ring-emerald-500/25 shadow-[0_6px_16px_rgba(16,185,129,0.3)]"
                           : "bg-white border-zinc-800 group-hover:border-emerald-500 group-hover:bg-emerald-50/50"
                       }`}
                     >
                       {/* Month Name */}
                       <span
-                        className={`font-black text-sm sm:text-base tracking-wide font-display ${
+                        className={`font-black text-base sm:text-lg tracking-wide font-display ${
                           isSelected ? "text-emerald-950" : "text-zinc-800"
                         }`}
                       >
@@ -282,7 +282,7 @@ export function RoadToGate({ selectedMonth, onSelectMonth, monthlyStats }: RoadT
 
                       {/* Active Month Top Badge Accent */}
                       {isSelected && (
-                        <div className="absolute -top-3 px-2 py-0.5 rounded-full bg-amber-400 border border-zinc-800 text-[10px] sm:text-xs font-black text-zinc-950 font-display flex items-center gap-0.5 shadow-xs">
+                        <div className="absolute -top-3.5 px-2.5 py-0.5 rounded-full bg-amber-400 border border-zinc-800 text-[11px] sm:text-xs font-black text-zinc-950 font-display flex items-center gap-0.5 shadow-xs">
                           <span>★ Selected</span>
                         </div>
                       )}
@@ -290,14 +290,14 @@ export function RoadToGate({ selectedMonth, onSelectMonth, monthlyStats }: RoadT
 
                     {/* Wooden post connecting sign to ground */}
                     <div
-                      className={`w-2 sm:w-2.5 h-6 sm:h-9 border-x-2 border-zinc-800 transition-colors ${
+                      className={`w-2.5 sm:w-2.5 h-7 sm:h-9 border-x-2 border-zinc-800 transition-colors ${
                         isSelected ? "bg-emerald-500" : "bg-amber-800/80"
                       }`}
                     />
 
                     {/* Trail Node / Circle */}
                     <div
-                      className={`w-6 h-6 sm:w-6.5 sm:h-6.5 rounded-full border-2 border-zinc-900 flex items-center justify-center shadow-xs transition-all ${
+                      className={`w-7 h-7 sm:w-7 sm:h-7 rounded-full border-2 border-zinc-900 flex items-center justify-center shadow-xs transition-all ${
                         isSelected
                           ? "bg-emerald-500 text-white scale-110 sm:scale-125 ring-2 sm:ring-4 ring-emerald-300"
                           : stats.percent >= 80
@@ -308,16 +308,16 @@ export function RoadToGate({ selectedMonth, onSelectMonth, monthlyStats }: RoadT
                       }`}
                     >
                       {stats.percent >= 80 ? (
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        <Check className="w-4 h-4 stroke-[3]" />
                       ) : (
-                        <span className="w-2 h-2 rounded-full bg-current" />
+                        <span className="w-2.5 h-2.5 rounded-full bg-current" />
                       )}
                     </div>
 
-                    {/* Status Pill below node - Full text, clearly legible */}
+                    {/* Status Pill below node - Extra clear, high-contrast text */}
                     <div className="mt-1.5">
                       <div
-                        className={`text-[11px] sm:text-xs font-bold px-2.5 py-1 rounded-full border border-zinc-800/60 shadow-xs flex items-center gap-1 whitespace-nowrap ${
+                        className={`text-xs sm:text-xs font-bold px-3 py-1 rounded-full border border-zinc-800/60 shadow-xs flex items-center gap-1.5 whitespace-nowrap ${
                           isSelected
                             ? "bg-emerald-100 text-emerald-950 border-emerald-600"
                             : stats.percent >= 80
@@ -329,7 +329,7 @@ export function RoadToGate({ selectedMonth, onSelectMonth, monthlyStats }: RoadT
                       >
                         {stats.percent >= 80 ? (
                           <>
-                            <Check className="w-3 h-3 text-emerald-600 stroke-[3]" />
+                            <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
                             <span>Completed {stats.percent}%</span>
                           </>
                         ) : stats.planned ? (
