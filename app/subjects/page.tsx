@@ -33,21 +33,6 @@ import { EditSubjectModal } from "@/components/EditSubjectModal";
 import { Subject } from "@/components/MonthlySubjectsCard";
 import { authClient } from "@/lib/auth/client";
 
-// Standard GATE CSE Syllabus subjects for 1-click quick add
-const COMMON_GATE_SUBJECTS = [
-  { title: "Computer Networks", icon: "monitor", totalLectures: 48 },
-  { title: "Theory of Computation", icon: "terminal", totalLectures: 45 },
-  { title: "Compiler Design", icon: "code", totalLectures: 35 },
-  { title: "COA (Computer Organization)", icon: "laptop", totalLectures: 50 },
-  { title: "Algorithms", icon: "code", totalLectures: 42 },
-  { title: "Programming & Data Structures", icon: "code", totalLectures: 50 },
-  { title: "DBMS (Database Management)", icon: "database", totalLectures: 42 },
-  { title: "Operating Systems", icon: "laptop", totalLectures: 44 },
-  { title: "Digital Logic", icon: "terminal", totalLectures: 38 },
-  { title: "Engineering Mathematics", icon: "math", totalLectures: 55 },
-  { title: "General Aptitude", icon: "graph", totalLectures: 30 },
-];
-
 const CARD_THEMES = [
   {
     bg: "bg-[#F9FCF8]",
@@ -285,28 +270,6 @@ export default function SubjectsPage() {
     }
   };
 
-  // Quick add pre-defined GATE subject
-  const handleQuickAdd = async (s: { title: string; icon: string; totalLectures: number }) => {
-    if (!user) {
-      setShowAuthModal(true);
-      return;
-    }
-
-    // Check if already exists
-    if (subjects.some((sub) => sub.title.toLowerCase() === s.title.toLowerCase())) {
-      return;
-    }
-
-    await handleCreateSubject({
-      title: s.title,
-      icon: s.icon,
-      totalLectures: s.totalLectures,
-      completedLectures: 0,
-      month: "",
-      isUrgent: false,
-    });
-  };
-
   // Delete subject completely
   const handleDeleteSubject = async (subject: Subject) => {
     if (!user) {
@@ -370,12 +333,6 @@ export default function SubjectsPage() {
       return true;
     });
   }, [subjects, filterTab, searchQuery]);
-
-  // Quick suggestions not yet added
-  const unaddedCommonSubjects = useMemo(() => {
-    const existingTitles = new Set(subjects.map((s) => s.title.toLowerCase()));
-    return COMMON_GATE_SUBJECTS.filter((s) => !existingTitles.has(s.title.toLowerCase()));
-  }, [subjects]);
 
   return (
     <div className="min-h-screen pb-16 px-3 sm:px-6">
@@ -517,37 +474,6 @@ export default function SubjectsPage() {
             </span>
           </div>
         </div>
-
-        {/* Quick Add Common GATE Subjects Section (if some unadded) */}
-        {unaddedCommonSubjects.length > 0 && (
-          <div className="rounded-3xl border-2 border-zinc-900 bg-[#F9FBFC] p-4 shadow-[3px_3px_0px_rgba(0,0,0,0.08)]">
-            <div className="flex items-center justify-between gap-2 mb-2.5">
-              <div className="flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-indigo-600" />
-                <span className="font-bold text-xs uppercase tracking-wider text-zinc-700 font-display">
-                  Quick Add GATE CSE Syllabus Subjects:
-                </span>
-              </div>
-              <span className="text-[11px] text-zinc-500 font-medium">Click to add with 1 tap</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {unaddedCommonSubjects.slice(0, 6).map((cs) => (
-                <button
-                  key={cs.title}
-                  onClick={() => handleQuickAdd(cs)}
-                  className="px-3 py-1.5 rounded-full border-2 border-zinc-800 bg-white hover:bg-emerald-50 text-xs font-bold text-zinc-800 flex items-center gap-1.5 shadow-2xs hover:border-emerald-600 transition-all cursor-pointer font-display active:scale-95"
-                  title={`Add ${cs.title} (${cs.totalLectures} lectures)`}
-                >
-                  <Plus className="w-3 h-3 text-emerald-600 stroke-[3]" />
-                  <span>{cs.title}</span>
-                  <span className="text-[10px] text-zinc-400 font-semibold">
-                    ({cs.totalLectures})
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Filters and Search Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">

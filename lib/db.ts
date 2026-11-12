@@ -54,35 +54,5 @@ export async function ensureDbSchema() {
     );
   `;
 
-  // Seed default subjects from mockup if none exist
-  const existing = await sql`SELECT count(*)::int as count FROM subjects`;
-  if (existing[0]?.count === 0) {
-    const s1 = "sub-os";
-    const s2 = "sub-cprog";
-    const s3 = "sub-dsa";
-    const s4 = "sub-algo";
-
-    await sql`
-      INSERT INTO subjects (id, user_id, title, icon, total_lectures, completed_lectures)
-      VALUES 
-        (${s1}, 'default_user', 'Operating Systems', 'laptop', 45, 28),
-        (${s2}, 'default_user', 'C Programming', 'code', 20, 12),
-        (${s3}, 'default_user', 'Data Structures', 'layers', 35, 10),
-        (${s4}, 'default_user', 'Algorithms', 'graph', 30, 8);
-    `;
-
-    await sql`
-      INSERT INTO subject_monthly_plans (id, subject_id, month, is_urgent)
-      VALUES
-        ('plan-os-nov', ${s1}, '2026-11', true),
-        ('plan-c-nov', ${s2}, '2026-11', true),
-        ('plan-dsa-nov', ${s3}, '2026-11', false),
-        ('plan-algo-nov', ${s4}, '2026-11', false),
-        -- Carry-over examples for Dec & Jan if needed
-        ('plan-dsa-dec', ${s3}, '2026-12', true),
-        ('plan-algo-dec', ${s4}, '2026-12', true);
-    `;
-  }
-
   initialized = true;
 }
