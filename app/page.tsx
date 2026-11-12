@@ -22,6 +22,7 @@ export default async function Home() {
           s.icon,
           s.total_lectures,
           s.completed_lectures,
+          COALESCE(s.teacher, '') as teacher,
           s.created_at,
           COALESCE(
             json_agg(
