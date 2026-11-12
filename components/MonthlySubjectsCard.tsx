@@ -9,11 +9,12 @@ import {
   Bell,
   Laptop,
   Code2,
-  Share2,
   Database,
   Calculator,
   BookOpen,
   Terminal,
+  BarChart3,
+  Monitor,
   MoreVertical,
   Trash2,
   CalendarPlus,
@@ -32,6 +33,41 @@ export interface Subject {
     is_urgent: boolean;
   }>;
 }
+
+const CARD_THEMES = [
+  {
+    bg: "bg-[#F9FCF8]",
+    border: "border-emerald-200/90",
+    blob: "bg-emerald-100/80",
+    ray: "text-emerald-500",
+    badge: "bg-emerald-100/70 text-emerald-950 border border-emerald-300/50",
+    pillNum: "bg-emerald-100",
+  },
+  {
+    bg: "bg-[#FFFDF7]",
+    border: "border-amber-200/90",
+    blob: "bg-amber-100/80",
+    ray: "text-amber-500",
+    badge: "bg-amber-100/70 text-amber-950 border border-amber-300/50",
+    pillNum: "bg-amber-100",
+  },
+  {
+    bg: "bg-[#FAF8FC]",
+    border: "border-purple-200/90",
+    blob: "bg-purple-100/80",
+    ray: "text-purple-400",
+    badge: "bg-purple-100/70 text-purple-950 border border-purple-300/50",
+    pillNum: "bg-purple-100",
+  },
+  {
+    bg: "bg-[#F5FBF9]",
+    border: "border-teal-200/90",
+    blob: "bg-teal-100/80",
+    ray: "text-teal-500",
+    badge: "bg-teal-100/70 text-teal-950 border border-teal-300/50",
+    pillNum: "bg-teal-100",
+  },
+];
 
 interface MonthlySubjectsCardProps {
   monthName: string;
@@ -64,20 +100,24 @@ export function MonthlySubjectsCard({
 
   // Helper for subject icons
   const renderIcon = (iconName: string) => {
-    const props = { className: "w-5 h-5 text-zinc-800" };
+    const props = { className: "w-5 h-5 text-zinc-900 relative z-10" };
     switch (iconName) {
       case "code":
         return <Code2 {...props} />;
+      case "terminal":
+        return <Terminal {...props} />;
+      case "monitor":
+        return <Monitor {...props} />;
       case "layers":
         return <Layers {...props} />;
       case "graph":
-        return <Share2 {...props} />;
+      case "chart":
+      case "stats":
+        return <BarChart3 {...props} />;
       case "database":
         return <Database {...props} />;
       case "math":
         return <Calculator {...props} />;
-      case "terminal":
-        return <Terminal {...props} />;
       case "book":
         return <BookOpen {...props} />;
       default:
@@ -118,16 +158,17 @@ export function MonthlySubjectsCard({
   );
 
   return (
-    <div className="relative w-full rounded-3xl bg-white border-2 border-zinc-800/80 p-3.5 sm:p-7 shadow-[3px_4px_0px_rgba(0,0,0,0.08)] flex flex-col justify-between">
+    <div className="relative w-full rounded-3xl bg-[#FCFAF6] border-2 border-zinc-800/80 p-3.5 sm:p-7 shadow-[3px_4px_0px_rgba(0,0,0,0.08)] flex flex-col justify-between">
       {/* Header */}
       <div>
         <div className="flex items-center justify-between gap-2 sm:gap-3 mb-3.5 sm:mb-6">
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-50 border-2 border-zinc-800 flex items-center justify-center shadow-xs">
-              <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-800" />
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 border-2 border-zinc-800 flex items-center justify-center shadow-xs">
+              <Layers className="w-4 h-4 text-emerald-800" />
             </div>
-            <h3 className="font-extrabold text-base sm:text-2xl text-zinc-900 font-display">
-              {monthName} · Subjects
+            <h3 className="font-extrabold text-base sm:text-2xl text-zinc-900 font-display flex items-center gap-1">
+              <span>{monthName} · Subjects</span>
+              <span className="text-emerald-500 font-hand text-lg sm:text-xl font-bold">彡</span>
             </h3>
           </div>
 
@@ -179,7 +220,7 @@ export function MonthlySubjectsCard({
 
             <button
               onClick={onOpenAddModal}
-              className="px-3 py-1 sm:px-5 sm:py-2 rounded-full bg-emerald-50 border-2 border-zinc-800 text-zinc-900 font-bold text-xs sm:text-base hover:bg-emerald-100 flex items-center gap-1 sm:gap-1.5 transition-all shadow-[2px_2px_0px_rgba(0,0,0,0.1)] active:translate-y-0.5 cursor-pointer"
+              className="px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-full bg-[#ECFDF5] border-2 border-zinc-800 text-zinc-900 font-bold text-xs sm:text-base hover:bg-emerald-100 flex items-center gap-1 sm:gap-1.5 transition-all shadow-[2px_2px_0px_rgba(0,0,0,0.1)] active:translate-y-0.5 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-700 stroke-[3]" />
               <span>Add Subject</span>
@@ -188,7 +229,7 @@ export function MonthlySubjectsCard({
         </div>
 
         {/* Subjects List */}
-        <div className="space-y-2 sm:space-y-3.5">
+        <div className="space-y-3 sm:space-y-3.5">
           <AnimatePresence>
             {subjects.length === 0 ? (
               <motion.div
@@ -212,7 +253,7 @@ export function MonthlySubjectsCard({
                 </button>
               </motion.div>
             ) : (
-              subjects.map((subject) => {
+              subjects.map((subject, index) => {
                 const plan = subject.monthly_plans.find((p) => p.month === monthId);
                 const isUrgent = plan?.is_urgent ?? false;
                 const percent =
@@ -220,6 +261,7 @@ export function MonthlySubjectsCard({
                     ? Math.round((subject.completed_lectures / subject.total_lectures) * 100)
                     : 0;
                 const isComplete = subject.completed_lectures >= subject.total_lectures;
+                const theme = CARD_THEMES[index % CARD_THEMES.length];
 
                 return (
                   <motion.div
@@ -228,40 +270,230 @@ export function MonthlySubjectsCard({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="relative group p-2.5 sm:p-3 rounded-2xl border border-zinc-200/80 hover:border-zinc-300 hover:bg-zinc-50/60 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4"
+                    className={`relative group rounded-2xl border-2 transition-all p-3.5 sm:p-3 shadow-xs ${theme.bg} ${theme.border} sm:bg-white sm:border-zinc-200/80 sm:hover:border-zinc-300 sm:hover:bg-zinc-50/60 sm:shadow-none flex flex-col justify-between`}
                   >
-                    {/* TOP ROW: Icon + Title + Urgent tag + (Stepper & Menu on Mobile) */}
-                    <div className="flex items-center justify-between gap-2 sm:gap-3 w-full sm:w-auto min-w-0">
-                      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center shrink-0">
+                    {/* ========================================================================= */}
+                    {/* MOBILE VIEW (< sm) - Matches Uploaded Mobile Mockup                       */}
+                    {/* ========================================================================= */}
+                    <div className="sm:hidden flex flex-col gap-2.5">
+                      {/* Top Row: Icon with radiating sketch rays + Title + Stepper + 3 dots */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-3 min-w-0">
+                          {/* Icon with radiating sketch rays & watercolor blob */}
+                          <div className="relative w-11 h-11 flex items-center justify-center shrink-0">
+                            {/* 3 Radiating hand-drawn sketch rays */}
+                            <svg
+                              className={`absolute -inset-1 w-13 h-13 pointer-events-none ${theme.ray}`}
+                              viewBox="0 0 52 52"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                            >
+                              <path d="M12 12 L6 6" />
+                              <path d="M26 8 L26 2" />
+                              <path d="M40 12 L46 6" />
+                            </svg>
+
+                            {/* Soft organic watercolor splash blob */}
+                            <div
+                              className={`absolute inset-0.5 rounded-[45%_55%_65%_35%/50%_60%_40%_50%] ${theme.blob}`}
+                            />
+
+                            {/* Actual Icon */}
+                            {renderIcon(subject.icon)}
+                          </div>
+
+                          {/* Title & Urgent Tag */}
+                          <div className="flex flex-col gap-1 min-w-0">
+                            <div className="flex items-center gap-1">
+                              <span className="font-extrabold text-base text-zinc-950 font-display truncate max-w-[130px]">
+                                {subject.title}
+                              </span>
+                              <span className="text-emerald-500 font-hand font-bold text-base select-none shrink-0">
+                                彡
+                              </span>
+                              {isComplete && (
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                              )}
+                            </div>
+
+                            {/* Urgent Badge / Toggle */}
+                            <div>
+                              {isUrgent ? (
+                                <button
+                                  onClick={() => onToggleUrgent(subject.id, monthId, true)}
+                                  className="px-2.5 py-0.5 rounded-full bg-rose-100/90 border border-rose-200 text-[11px] font-bold text-rose-600 inline-flex items-center gap-1 hover:bg-rose-200 transition-colors cursor-pointer"
+                                  title="Urgent: must complete this month. Click to toggle."
+                                >
+                                  <Bell className="w-3 h-3 fill-rose-500 text-rose-500" />
+                                  <span>Urgent</span>
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => onToggleUrgent(subject.id, monthId, false)}
+                                  className="px-2.5 py-0.5 rounded-full bg-slate-100/90 border border-slate-200 text-[11px] font-semibold text-slate-600 inline-flex items-center gap-1 hover:bg-slate-200 transition-colors cursor-pointer"
+                                  title="Click to mark as Urgent"
+                                >
+                                  <span>+ Mark Urgent</span>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Right: Stepper Counter + 3-Dots Menu */}
+                        <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
+                          {/* Stepper Pill */}
+                          <div className="flex items-center rounded-full border-2 border-zinc-800 bg-white shadow-xs px-2.5 py-0.5 h-8 gap-2.5">
+                            <button
+                              onClick={() => handleDecrement(subject)}
+                              disabled={subject.completed_lectures <= 0 || loadingSubjectId === subject.id}
+                              className="w-5 h-5 flex items-center justify-center text-zinc-800 hover:text-zinc-950 active:scale-90 disabled:opacity-30 transition-transform cursor-pointer font-bold"
+                              title="Decrement 1 lecture"
+                            >
+                              <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
+                            </button>
+                            <div
+                              className={`w-5 h-5 rounded-full ${theme.pillNum} flex items-center justify-center font-black text-xs text-zinc-950 font-display`}
+                            >
+                              {subject.completed_lectures}
+                            </div>
+                            <button
+                              onClick={() => handleIncrement(subject)}
+                              disabled={
+                                subject.completed_lectures >= subject.total_lectures ||
+                                loadingSubjectId === subject.id
+                              }
+                              className="w-5 h-5 flex items-center justify-center text-zinc-800 hover:text-zinc-950 active:scale-90 disabled:opacity-30 transition-transform cursor-pointer font-bold"
+                              title="Log 1 completed lecture"
+                            >
+                              <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                            </button>
+                          </div>
+
+                          {/* 3-Dots Menu */}
+                          <div className="relative">
+                            <button
+                              onClick={() =>
+                                setActiveMenuId(activeMenuId === subject.id ? null : subject.id)
+                              }
+                              className="w-7 h-7 rounded-full hover:bg-zinc-200/60 flex items-center justify-center text-zinc-700 cursor-pointer"
+                              title="Subject options"
+                            >
+                              <MoreVertical className="w-4 h-4" />
+                            </button>
+
+                            <AnimatePresence>
+                              {activeMenuId === subject.id && (
+                                <motion.div
+                                  initial={{ opacity: 0, scale: 0.95 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  exit={{ opacity: 0, scale: 0.95 }}
+                                  className="absolute right-0 top-8 z-30 w-44 rounded-2xl bg-white border-2 border-zinc-800 p-1.5 shadow-xl"
+                                >
+                                  <button
+                                    onClick={async () => {
+                                      setActiveMenuId(null);
+                                      await onToggleUrgent(subject.id, monthId, isUrgent);
+                                    }}
+                                    className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-800 hover:bg-zinc-100 flex items-center gap-2"
+                                  >
+                                    <Bell className="w-3.5 h-3.5 text-zinc-600" />
+                                    <span>{isUrgent ? "Unmark Urgent" : "Mark as Urgent"}</span>
+                                  </button>
+
+                                  <button
+                                    onClick={async () => {
+                                      setActiveMenuId(null);
+                                      await onRemoveFromMonth(subject.id, monthId);
+                                    }}
+                                    className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold text-amber-700 hover:bg-amber-50 flex items-center gap-2"
+                                  >
+                                    <CalendarPlus className="w-3.5 h-3.5" />
+                                    <span>Remove from {monthName}</span>
+                                  </button>
+
+                                  <div className="my-1 border-t border-zinc-200" />
+
+                                  <button
+                                    onClick={async () => {
+                                      setActiveMenuId(null);
+                                      if (confirm(`Delete "${subject.title}" completely?`)) {
+                                        await onDeleteSubject(subject.id);
+                                      }
+                                    }}
+                                    className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    <span>Delete Subject</span>
+                                  </button>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Full-width Progress Bar */}
+                      <div className="w-full h-2.5 rounded-full bg-zinc-200/80 overflow-hidden p-0.5">
+                        <motion.div
+                          className={`h-full rounded-full ${
+                            isComplete ? "bg-emerald-600" : "bg-emerald-500"
+                          }`}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.min(100, percent)}%` }}
+                          transition={{ duration: 0.5, ease: "easeOut" }}
+                        />
+                      </div>
+
+                      {/* Bottom Row: Lectures Count & Percentage Pill */}
+                      <div className="flex items-center justify-between text-xs font-bold text-zinc-800 font-display pt-0.5">
+                        <span>
+                          {subject.completed_lectures} / {subject.total_lectures} lectures
+                        </span>
+                        <span
+                          className={`px-2.5 py-0.5 rounded-md font-black text-xs ${theme.badge}`}
+                        >
+                          {percent}%
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* ========================================================================= */}
+                    {/* DESKTOP VIEW (sm:+) - Preserved Original Mockup Layout                    */}
+                    {/* ========================================================================= */}
+                    <div className="hidden sm:flex sm:items-center justify-between gap-4 w-full">
+                      {/* Left: Icon + Title + Urgent badge */}
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center shrink-0">
                           {renderIcon(subject.icon)}
                         </div>
 
                         <div className="flex flex-col gap-0.5 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span className="font-bold text-xs sm:text-base text-zinc-900 font-display truncate max-w-[130px] sm:max-w-[220px]">
+                            <span className="font-bold text-base text-zinc-900 font-display truncate max-w-[220px]">
                               {subject.title}
                             </span>
                             {isComplete && (
-                              <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 shrink-0" />
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                             )}
                           </div>
 
-                          {/* Urgent Badge / Toggle */}
                           <div className="flex items-center gap-1.5">
                             {isUrgent ? (
                               <button
                                 onClick={() => onToggleUrgent(subject.id, monthId, true)}
-                                className="px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-full bg-rose-50 border border-rose-200 text-[10px] sm:text-[11px] font-bold text-rose-700 flex items-center gap-1 hover:bg-rose-100 transition-colors cursor-pointer"
+                                className="px-2 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-[11px] font-bold text-rose-700 flex items-center gap-1 hover:bg-rose-100 transition-colors cursor-pointer"
                                 title="Urgent: must complete this month. Click to toggle."
                               >
-                                <Bell className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-rose-500 text-rose-500" />
+                                <Bell className="w-3.5 h-3.5 fill-rose-500 text-rose-500" />
                                 <span>Urgent</span>
                               </button>
                             ) : (
                               <button
                                 onClick={() => onToggleUrgent(subject.id, monthId, false)}
-                                className="px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-full bg-zinc-100 text-[10px] sm:text-[11px] font-semibold text-zinc-500 hover:text-zinc-800 hover:bg-zinc-200 transition-colors cursor-pointer"
+                                className="px-2 py-0.5 rounded-full bg-zinc-100 text-[11px] font-semibold text-zinc-500 hover:text-zinc-800 hover:bg-zinc-200 transition-colors cursor-pointer"
                                 title="Click to mark as Urgent"
                               >
                                 + Mark Urgent
@@ -271,18 +503,41 @@ export function MonthlySubjectsCard({
                         </div>
                       </div>
 
-                      {/* On Mobile: Stepper Counter & Menu on Top Row */}
-                      <div className="flex sm:hidden items-center gap-1.5 shrink-0">
-                        <div className="flex items-center rounded-full border-2 border-zinc-800 bg-white shadow-xs overflow-hidden h-7">
+                      {/* Middle: Progress Bar & Lecture Ratio */}
+                      <div className="flex-1 flex items-center gap-4 px-3">
+                        <div className="flex-1 h-3 rounded-full bg-zinc-200/90 overflow-hidden p-0.5">
+                          <motion.div
+                            className={`h-full rounded-full ${
+                              isComplete ? "bg-emerald-600" : "bg-emerald-500"
+                            }`}
+                            initial={{ width: 0 }}
+                            animate={{ width: `${Math.min(100, percent)}%` }}
+                            transition={{ duration: 0.5, ease: "easeOut" }}
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2 text-sm font-semibold text-zinc-600 font-display shrink-0">
+                          <span>
+                            {subject.completed_lectures} / {subject.total_lectures}
+                          </span>
+                          <span className="font-bold text-zinc-900">
+                            {percent}%
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Right: Stepper Counter Controls & Actions */}
+                      <div className="flex items-center justify-end gap-2 shrink-0">
+                        <div className="flex items-center rounded-full border-2 border-zinc-800 bg-white shadow-xs overflow-hidden">
                           <button
                             onClick={() => handleDecrement(subject)}
                             disabled={subject.completed_lectures <= 0 || loadingSubjectId === subject.id}
-                            className="w-6 h-full flex items-center justify-center text-zinc-700 hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-30 transition-colors"
+                            className="w-8 h-8 flex items-center justify-center text-zinc-700 hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-30 transition-colors cursor-pointer"
                             title="Decrement 1 lecture"
                           >
-                            <Minus className="w-3 h-3 stroke-[2.5]" />
+                            <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
                           </button>
-                          <div className="px-1.5 min-w-[22px] text-center font-extrabold text-xs text-zinc-900 font-display">
+                          <div className="px-2.5 min-w-[28px] text-center font-extrabold text-sm text-zinc-900 font-display">
                             {subject.completed_lectures}
                           </div>
                           <button
@@ -291,23 +546,23 @@ export function MonthlySubjectsCard({
                               subject.completed_lectures >= subject.total_lectures ||
                               loadingSubjectId === subject.id
                             }
-                            className="w-6 h-full flex items-center justify-center text-zinc-700 hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-30 transition-colors"
+                            className="w-8 h-8 flex items-center justify-center text-zinc-700 hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-30 transition-colors cursor-pointer"
                             title="Log 1 completed lecture"
                           >
-                            <Plus className="w-3 h-3 stroke-[2.5]" />
+                            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                           </button>
                         </div>
 
-                        {/* Mobile Menu Button */}
+                        {/* Desktop Dropdown Options Menu */}
                         <div className="relative">
                           <button
                             onClick={() =>
                               setActiveMenuId(activeMenuId === subject.id ? null : subject.id)
                             }
-                            className="w-7 h-7 rounded-full hover:bg-zinc-100 flex items-center justify-center text-zinc-500 cursor-pointer"
+                            className="w-8 h-8 rounded-full hover:bg-zinc-100 flex items-center justify-center text-zinc-500 hover:text-zinc-800 transition-colors cursor-pointer"
                             title="Subject options"
                           >
-                            <MoreVertical className="w-3.5 h-3.5" />
+                            <MoreVertical className="w-4 h-4" />
                           </button>
 
                           <AnimatePresence>
@@ -316,7 +571,7 @@ export function MonthlySubjectsCard({
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
-                                className="absolute right-0 top-8 z-30 w-44 rounded-2xl bg-white border-2 border-zinc-800 p-1.5 shadow-xl"
+                                className="absolute right-0 top-9 z-30 w-44 rounded-2xl bg-white border-2 border-zinc-800 p-1.5 shadow-xl"
                               >
                                 <button
                                   onClick={async () => {
@@ -360,118 +615,6 @@ export function MonthlySubjectsCard({
                         </div>
                       </div>
                     </div>
-
-                    {/* Progress Bar & Lecture Ratio: Slim on Mobile, Full column on Desktop */}
-                    <div className="w-full sm:flex-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-1 sm:gap-4 px-0.5 sm:px-3">
-                      <div className="w-full sm:flex-1 h-2 sm:h-3 rounded-full bg-zinc-200/90 overflow-hidden p-0.5">
-                        <motion.div
-                          className={`h-full rounded-full ${
-                            isComplete ? "bg-emerald-600" : "bg-emerald-500"
-                          }`}
-                          initial={{ width: 0 }}
-                          animate={{ width: `${Math.min(100, percent)}%` }}
-                          transition={{ duration: 0.5, ease: "easeOut" }}
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between sm:justify-end gap-2 text-[11px] sm:text-sm font-semibold text-zinc-600 font-display shrink-0">
-                        <span>
-                          {subject.completed_lectures} / {subject.total_lectures}
-                        </span>
-                        <span className="font-bold text-zinc-900">
-                          {percent}%
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Desktop-only: Stepper Counter Controls & Actions */}
-                    <div className="hidden sm:flex items-center justify-end gap-2 shrink-0">
-                      <div className="flex items-center rounded-full border-2 border-zinc-800 bg-white shadow-xs overflow-hidden">
-                        <button
-                          onClick={() => handleDecrement(subject)}
-                          disabled={subject.completed_lectures <= 0 || loadingSubjectId === subject.id}
-                          className="w-8 h-8 flex items-center justify-center text-zinc-700 hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-30 transition-colors"
-                          title="Decrement 1 lecture"
-                        >
-                          <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
-                        </button>
-                        <div className="px-2.5 min-w-[28px] text-center font-extrabold text-sm text-zinc-900 font-display">
-                          {subject.completed_lectures}
-                        </div>
-                        <button
-                          onClick={() => handleIncrement(subject)}
-                          disabled={
-                            subject.completed_lectures >= subject.total_lectures ||
-                            loadingSubjectId === subject.id
-                          }
-                          className="w-8 h-8 flex items-center justify-center text-zinc-700 hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-30 transition-colors"
-                          title="Log 1 completed lecture"
-                        >
-                          <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-                        </button>
-                      </div>
-
-                      {/* Desktop Dropdown Options Menu */}
-                      <div className="relative">
-                        <button
-                          onClick={() =>
-                            setActiveMenuId(activeMenuId === subject.id ? null : subject.id)
-                          }
-                          className="w-8 h-8 rounded-full hover:bg-zinc-100 flex items-center justify-center text-zinc-500 hover:text-zinc-800 transition-colors cursor-pointer"
-                          title="Subject options"
-                        >
-                          <MoreVertical className="w-4 h-4" />
-                        </button>
-
-                        <AnimatePresence>
-                          {activeMenuId === subject.id && (
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.95 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.95 }}
-                              className="absolute right-0 top-9 z-30 w-44 rounded-2xl bg-white border-2 border-zinc-800 p-1.5 shadow-xl"
-                            >
-                              <button
-                                onClick={async () => {
-                                  setActiveMenuId(null);
-                                  await onToggleUrgent(subject.id, monthId, isUrgent);
-                                }}
-                                className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-800 hover:bg-zinc-100 flex items-center gap-2"
-                              >
-                                <Bell className="w-3.5 h-3.5 text-zinc-600" />
-                                <span>{isUrgent ? "Unmark Urgent" : "Mark as Urgent"}</span>
-                              </button>
-
-                              <button
-                                onClick={async () => {
-                                  setActiveMenuId(null);
-                                  await onRemoveFromMonth(subject.id, monthId);
-                                }}
-                                className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold text-amber-700 hover:bg-amber-50 flex items-center gap-2"
-                              >
-                                <CalendarPlus className="w-3.5 h-3.5" />
-                                <span>Remove from {monthName}</span>
-                              </button>
-
-                              <div className="my-1 border-t border-zinc-200" />
-
-                              <button
-                                onClick={async () => {
-                                  setActiveMenuId(null);
-                                  if (confirm(`Delete "${subject.title}" completely?`)) {
-                                    await onDeleteSubject(subject.id);
-                                  }
-                                }}
-                                className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                                <span>Delete Subject</span>
-                              </button>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    </div>
                   </motion.div>
                 );
               })
@@ -482,4 +625,3 @@ export function MonthlySubjectsCard({
     </div>
   );
 }
-
