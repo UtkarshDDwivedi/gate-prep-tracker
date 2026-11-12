@@ -2,8 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Check, Calendar, Sprout, Flag } from "lucide-react";
-import { HikerCat } from "./HikerCat";
+import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 
 export interface MonthInfo {
   id: string; // e.g. "2026-10", "2026-11", "2026-12", "2027-01", "2027-02"
@@ -44,11 +43,11 @@ export function RoadToGate({ selectedMonth, onSelectMonth, monthlyStats }: RoadT
   return (
     <div className="relative w-full max-w-5xl mx-auto flex flex-col items-center">
       {/* Title with highlighter effect & hand-drawn sparkles */}
-      <div className="relative text-center my-2 sm:my-3 select-none">
-        <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-zinc-900 font-display flex items-center justify-center gap-1.5 sm:gap-2">
+      <div className="relative text-center my-3 select-none">
+        <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-zinc-900 font-display flex items-center justify-center gap-2">
           <span>Your Road to</span>
           <span className="relative inline-block mx-1">
-            <span className="relative z-10 px-2.5 sm:px-3 py-0.5 rounded-full bg-emerald-200/80 text-zinc-900 border border-emerald-400/40">
+            <span className="relative z-10 px-3 py-0.5 rounded-full bg-emerald-200/80 text-zinc-900 border border-emerald-400/40">
               GATE 2027
             </span>
             {/* Sparkle accents on title */}
@@ -62,174 +61,18 @@ export function RoadToGate({ selectedMonth, onSelectMonth, monthlyStats }: RoadT
         </h2>
       </div>
 
-      {/* ========================================================================= */}
-      {/* MOBILE UI (Swipeable Month Cards + Hiker Cat on Rolling Hills) (< md)     */}
-      {/* ========================================================================= */}
-      <div className="md:hidden w-full flex flex-col gap-2.5">
-        {/* Swipeable Month Cards (Snap-scroll, NO arrows) */}
-        <div className="w-full flex items-stretch gap-2 overflow-x-auto pb-1.5 pt-2 px-1 scrollbar-none snap-x snap-mandatory">
-          {MONTHS.map((month) => {
-            const isSelected = selectedMonth === month.id;
-            const stats = monthlyStats[month.id] || { total: 0, completed: 0, percent: 0, planned: false };
-
-            return (
-              <motion.div
-                key={month.id}
-                onClick={() => onSelectMonth(month.id)}
-                whileTap={{ scale: 0.96 }}
-                className={`relative min-w-[70px] flex-1 py-2 px-1.5 rounded-2xl border-2 transition-all flex flex-col items-center justify-center text-center snap-center cursor-pointer shadow-xs ${
-                  isSelected
-                    ? "bg-[#ECFDF5] border-emerald-600 ring-2 ring-emerald-500/20"
-                    : "bg-white border-zinc-800 hover:border-zinc-900"
-                }`}
-              >
-                {/* Active marker sparkles */}
-                {isSelected && (
-                  <span className="absolute -top-2.5 text-amber-500 text-[10px] font-hand font-black">
-                    ミ ★ 彡
-                  </span>
-                )}
-
-                {/* Top Icon */}
-                <div className="mb-1 flex items-center justify-center">
-                  {month.isCutoff ? (
-                    <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center text-amber-700">
-                      <Flag className="w-3.5 h-3.5 fill-amber-500" />
-                    </div>
-                  ) : isSelected ? (
-                    <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700">
-                      <Sprout className="w-3.5 h-3.5 stroke-[2.5]" />
-                    </div>
-                  ) : stats.percent >= 80 ? (
-                    <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700">
-                      <Check className="w-3.5 h-3.5 stroke-[3]" />
-                    </div>
-                  ) : (
-                    <div className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-600">
-                      <Calendar className="w-3.5 h-3.5" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Month Name */}
-                <span
-                  className={`text-xs font-black font-display tracking-tight leading-none mb-0.5 ${
-                    isSelected ? "text-emerald-950" : "text-zinc-900"
-                  }`}
-                >
-                  {month.shortName}
-                </span>
-
-                {/* Status Subtitle */}
-                <span
-                  className={`text-[10px] font-bold leading-tight ${
-                    month.isCutoff
-                      ? "text-emerald-700 font-extrabold uppercase"
-                      : isSelected
-                      ? "text-emerald-800"
-                      : stats.planned
-                      ? "text-zinc-700"
-                      : "text-zinc-400 font-normal"
-                  }`}
-                >
-                  {month.isCutoff
-                    ? "GATE!"
-                    : stats.planned
-                    ? `${stats.percent}%`
-                    : "Not planned"}
-                </span>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {/* Rolling Hills Landscape with Hiker Cat */}
-        <div className="relative w-full overflow-hidden rounded-3xl bg-linear-to-b from-[#F9F7F1] via-[#F3F8F2] to-[#E9F5E8] border-2 border-zinc-800 shadow-xs h-[140px] flex items-end justify-center px-4">
-          {/* Small sketched clouds */}
-          <div className="absolute top-2 left-6 opacity-60 pointer-events-none">
-            <svg width="45" height="22" viewBox="0 0 64 32" fill="none">
-              <path
-                d="M12 24 C8 24 4 20 6 16 C6 10 14 8 18 12 C22 6 34 6 38 12 C44 8 52 10 52 16 C56 18 56 24 50 24 Z"
-                fill="#FFFFFF"
-                stroke="#6B7280"
-                strokeWidth="1.5"
-              />
-            </svg>
-          </div>
-          <div className="absolute top-4 right-10 opacity-50 pointer-events-none">
-            <svg width="35" height="18" viewBox="0 0 50 26" fill="none">
-              <path
-                d="M10 20 C6 20 3 17 5 13 C5 8 11 6 15 10 C18 5 28 5 31 10 C36 7 42 8 42 13 C45 15 45 20 40 20 Z"
-                fill="#FFFFFF"
-                stroke="#6B7280"
-                strokeWidth="1.5"
-              />
-            </svg>
-          </div>
-
-          {/* Snowy Mountain in the background right */}
-          <div className="absolute right-4 bottom-8 pointer-events-none opacity-80">
-            <svg width="70" height="50" viewBox="0 0 120 90" fill="none">
-              <polygon
-                points="60,8 10,88 110,88"
-                fill="#C6F6D5"
-                stroke="#1F2937"
-                strokeWidth="2.5"
-                strokeLinejoin="round"
-              />
-              <polygon
-                points="60,8 40,40 50,36 60,44 70,36 80,40"
-                fill="#FFFFFF"
-                stroke="#1F2937"
-                strokeWidth="2"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-
-          {/* Rolling Hills Background SVG */}
-          <div className="absolute inset-0 pointer-events-none flex items-end">
-            <svg
-              className="w-full h-24"
-              viewBox="0 0 500 120"
-              preserveAspectRatio="none"
-              fill="none"
-            >
-              {/* Back hills */}
-              <path
-                d="M0 90 Q 150 40, 300 70 T 500 60 L 500 120 L 0 120 Z"
-                fill="#D1E7D0"
-                stroke="#22C55E"
-                strokeWidth="1.5"
-                strokeDasharray="4 4"
-                opacity="0.7"
-              />
-              {/* Foreground hills */}
-              <path
-                d="M0 95 C 120 65, 220 85, 350 75 C 430 70, 470 85, 500 80 L 500 120 L 0 120 Z"
-                fill="#BCDFB8"
-                stroke="#15803D"
-                strokeWidth="2"
-              />
-              {/* Little bush clusters */}
-              <g stroke="#166534" strokeWidth="1.5" fill="#86EFAC">
-                <path d="M 40 95 C 35 85, 50 80, 55 90 C 60 85, 75 88, 70 95 Z" />
-                <path d="M 420 88 C 415 78, 430 73, 435 83 C 440 78, 455 81, 450 88 Z" />
-              </g>
-            </svg>
-          </div>
-
-          {/* Hiker Cat Walking on Hills */}
-          <div className="relative z-10 -mb-1">
-            <HikerCat />
-          </div>
-        </div>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* DESKTOP UI (Panoramic Landscape with Trail, Signposts & Arrows) (md+)     */}
-      {/* ========================================================================= */}
-      <div className="hidden md:flex relative w-full overflow-hidden rounded-3xl bg-linear-to-b from-[#F9F7F1] via-[#F3F8F2] to-[#E9F5E8] border-2 border-zinc-800/80 shadow-[0_4px_20px_rgba(0,0,0,0.06)] min-h-[290px] p-4 items-center justify-between">
+      {/* Landscape Container with Horizontal Swipe Detection on Mobile */}
+      <motion.div
+        onPanEnd={(_e, info) => {
+          // Detect horizontal swipe on mobile touchscreens
+          if (info.offset.x < -35 || info.velocity.x < -250) {
+            handleNext();
+          } else if (info.offset.x > 35 || info.velocity.x > 250) {
+            handlePrev();
+          }
+        }}
+        className="relative w-full overflow-hidden rounded-3xl bg-linear-to-b from-[#F9F7F1] via-[#F3F8F2] to-[#E9F5E8] border-2 border-zinc-800/80 shadow-[0_4px_20px_rgba(0,0,0,0.06)] min-h-[220px] sm:min-h-[290px] p-2.5 sm:p-4 flex items-center justify-between touch-pan-y select-none"
+      >
         {/* Fluffy sketched clouds */}
         <div className="absolute top-4 left-16 opacity-60 pointer-events-none">
           <svg width="64" height="32" viewBox="0 0 64 32" fill="none">
@@ -252,11 +95,11 @@ export function RoadToGate({ selectedMonth, onSelectMonth, monthlyStats }: RoadT
           </svg>
         </div>
 
-        {/* Left Arrow Button */}
+        {/* Left Arrow Button (Retained on Desktop, Hidden on Mobile) */}
         <button
           onClick={handlePrev}
           disabled={currentIdx <= 0}
-          className="relative z-20 w-10 h-10 rounded-full bg-white border-2 border-zinc-800 flex items-center justify-center shadow-md hover:bg-zinc-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
+          className="hidden md:flex relative z-20 w-10 h-10 rounded-full bg-white border-2 border-zinc-800 items-center justify-center shadow-md hover:bg-zinc-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
           aria-label="Previous month"
         >
           <ChevronLeft className="w-5 h-5 text-zinc-800" />
@@ -340,7 +183,11 @@ export function RoadToGate({ selectedMonth, onSelectMonth, monthlyStats }: RoadT
                     </div>
 
                     {/* Mountain Graphic */}
-                    <svg width="120" height="90" viewBox="0 0 120 90" fill="none" className="-mt-3">
+                    <svg
+                      className="w-20 h-16 sm:w-[120px] sm:h-[90px] -mt-2 sm:-mt-3"
+                      viewBox="0 0 120 90"
+                      fill="none"
+                    >
                       {/* Mountain base */}
                       <polygon
                         points="60,8 10,88 110,88"
@@ -363,7 +210,7 @@ export function RoadToGate({ selectedMonth, onSelectMonth, monthlyStats }: RoadT
 
                     {/* February GATE Sign Card */}
                     <div
-                      className={`-mt-4 px-3 py-1.5 rounded-2xl border-2 border-zinc-800 font-bold text-xs sm:text-sm shadow-md transition-all ${
+                      className={`-mt-3 sm:-mt-4 px-2 py-1 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-2xl border-2 border-zinc-800 font-bold text-[11px] sm:text-sm shadow-md transition-all text-center ${
                         isSelected
                           ? "bg-amber-300 text-zinc-950 scale-105 ring-2 ring-amber-400 ring-offset-2"
                           : "bg-white text-zinc-800 group-hover:bg-amber-50"
@@ -371,7 +218,7 @@ export function RoadToGate({ selectedMonth, onSelectMonth, monthlyStats }: RoadT
                     >
                       <span className="font-display">February</span>
                       <br />
-                      <span className="text-emerald-700 font-extrabold text-[11px] uppercase tracking-wider">
+                      <span className="text-emerald-700 font-extrabold text-[10px] sm:text-[11px] uppercase tracking-wider">
                         GATE! 🎯
                       </span>
                     </div>
@@ -391,7 +238,7 @@ export function RoadToGate({ selectedMonth, onSelectMonth, monthlyStats }: RoadT
               >
                 {/* Signpost Board */}
                 <div
-                  className={`relative px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-2xl border-2 transition-all shadow-[2px_3px_0px_rgba(0,0,0,0.15)] flex flex-col items-center ${
+                  className={`relative px-2 py-1 sm:px-5 sm:py-2 rounded-xl sm:rounded-2xl border-2 transition-all shadow-[2px_3px_0px_rgba(0,0,0,0.15)] flex flex-col items-center ${
                     isSelected
                       ? "bg-white border-emerald-600 scale-105 ring-4 ring-emerald-500/20"
                       : "bg-white border-zinc-800 group-hover:border-emerald-500 group-hover:bg-emerald-50/50"
@@ -399,7 +246,7 @@ export function RoadToGate({ selectedMonth, onSelectMonth, monthlyStats }: RoadT
                 >
                   {/* Month Name */}
                   <span
-                    className={`font-bold text-sm sm:text-base tracking-wide font-display ${
+                    className={`font-bold text-xs sm:text-base tracking-wide font-display ${
                       isSelected ? "text-emerald-900" : "text-zinc-800"
                     }`}
                   >
@@ -419,16 +266,16 @@ export function RoadToGate({ selectedMonth, onSelectMonth, monthlyStats }: RoadT
 
                 {/* Wooden post connecting sign to ground */}
                 <div
-                  className={`w-2 h-7 sm:h-9 border-x-2 border-zinc-800 transition-colors ${
+                  className={`w-1.5 sm:w-2 h-5 sm:h-9 border-x-2 border-zinc-800 transition-colors ${
                     isSelected ? "bg-emerald-500" : "bg-amber-800/80"
                   }`}
                 />
 
                 {/* Trail Node / Circle */}
                 <div
-                  className={`w-6 h-6 rounded-full border-2 border-zinc-900 flex items-center justify-center transition-all ${
+                  className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 border-zinc-900 flex items-center justify-center transition-all ${
                     isSelected
-                      ? "bg-emerald-500 text-white scale-125 ring-4 ring-emerald-300"
+                      ? "bg-emerald-500 text-white scale-110 sm:scale-125 ring-2 sm:ring-4 ring-emerald-300"
                       : stats.percent >= 80
                       ? "bg-emerald-500 text-white"
                       : stats.planned
@@ -437,16 +284,16 @@ export function RoadToGate({ selectedMonth, onSelectMonth, monthlyStats }: RoadT
                   }`}
                 >
                   {stats.percent >= 80 ? (
-                    <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[3]" />
                   ) : (
-                    <span className="w-2 h-2 rounded-full bg-current" />
+                    <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-current" />
                   )}
                 </div>
 
                 {/* Status Pill below node */}
-                <div className="mt-1.5">
+                <div className="mt-1 sm:mt-1.5">
                   <div
-                    className={`text-[11px] sm:text-xs font-medium px-2.5 py-0.5 rounded-full border border-zinc-800/50 shadow-xs flex items-center gap-1 ${
+                    className={`text-[9px] sm:text-xs font-medium px-1.5 py-0.5 sm:px-2.5 sm:py-0.5 rounded-full border border-zinc-800/50 shadow-xs flex items-center gap-1 ${
                       isSelected
                         ? "bg-emerald-100 text-emerald-900 font-bold border-emerald-600"
                         : stats.percent >= 80
@@ -458,11 +305,11 @@ export function RoadToGate({ selectedMonth, onSelectMonth, monthlyStats }: RoadT
                   >
                     {stats.percent >= 80 ? (
                       <>
-                        <Check className="w-3 h-3 text-emerald-600 stroke-[3]" />
-                        <span>Completed {stats.percent}%</span>
+                        <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-emerald-600 stroke-[3]" />
+                        <span>{stats.percent}%</span>
                       </>
                     ) : stats.planned ? (
-                      <span>{stats.percent}% complete</span>
+                      <span>{stats.percent}%</span>
                     ) : (
                       <span>Not planned</span>
                     )}
@@ -473,15 +320,34 @@ export function RoadToGate({ selectedMonth, onSelectMonth, monthlyStats }: RoadT
           })}
         </div>
 
-        {/* Right Arrow Button */}
+        {/* Right Arrow Button (Retained on Desktop, Hidden on Mobile) */}
         <button
           onClick={handleNext}
           disabled={currentIdx >= MONTHS.length - 1}
-          className="relative z-20 w-10 h-10 rounded-full bg-white border-2 border-zinc-800 flex items-center justify-center shadow-md hover:bg-zinc-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
+          className="hidden md:flex relative z-20 w-10 h-10 rounded-full bg-white border-2 border-zinc-800 items-center justify-center shadow-md hover:bg-zinc-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
           aria-label="Next month"
         >
           <ChevronRight className="w-5 h-5 text-zinc-800" />
         </button>
+      </motion.div>
+
+      {/* Mobile Month Swipe Indicator & Navigation Dots */}
+      <div className="flex md:hidden items-center justify-center gap-1.5 mt-2.5 select-none">
+        <span className="text-[10px] text-zinc-400 font-display mr-1">
+          Swipe road ⇄
+        </span>
+        {MONTHS.map((m) => (
+          <button
+            key={m.id}
+            onClick={() => onSelectMonth(m.id)}
+            className={`transition-all rounded-full cursor-pointer ${
+              selectedMonth === m.id
+                ? "w-5 h-1.5 bg-emerald-600 shadow-xs"
+                : "w-1.5 h-1.5 bg-zinc-300 hover:bg-zinc-400"
+            }`}
+            aria-label={`Select ${m.name}`}
+          />
+        ))}
       </div>
     </div>
   );

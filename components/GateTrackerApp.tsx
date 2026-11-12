@@ -21,13 +21,19 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
   const [authModalMode, setAuthModalMode] = useState<"signin" | "signup">("signin");
   const [authPromptMessage, setAuthPromptMessage] = useState<string | null>(null);
 
-  // Real-time formatted date for header display
-  const currentDateText = useMemo(() => {
-    return new Date().toLocaleDateString("en-US", {
+  // Real-time formatted date for header display (full on desktop, compact on mobile)
+  const dateInfo = useMemo(() => {
+    const now = new Date();
+    const full = now.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
     });
+    const compact = now.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+    return { full, compact };
   }, []);
 
   const session = authClient.useSession();
@@ -351,7 +357,8 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
     <div className="min-h-screen pb-16 px-3 sm:px-6">
       {/* Top Header */}
       <Header
-        currentDateText={currentDateText}
+        currentDateText={dateInfo.full}
+        compactDateText={dateInfo.compact}
         onOpenAuthModal={(mode = "signin") => {
           setAuthModalMode(mode);
           setIsAuthModalOpen(true);

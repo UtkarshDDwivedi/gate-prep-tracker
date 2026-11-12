@@ -6,12 +6,14 @@ import { authClient } from "@/lib/auth/client";
 
 interface HeaderProps {
   currentDateText?: string;
+  compactDateText?: string;
   onOpenAuthModal?: (mode?: "signin" | "signup") => void;
   onRefreshData?: () => void;
 }
 
 export function Header({
-  currentDateText = "Nov 18, 2026",
+  currentDateText = "Nov 12, 2026",
+  compactDateText = "Nov 12",
   onOpenAuthModal,
   onRefreshData,
 }: HeaderProps) {
@@ -43,60 +45,50 @@ export function Header({
   };
 
   return (
-    <header className="w-full max-w-5xl mx-auto flex items-center justify-between py-4 sm:py-6 px-3 select-none">
+    <header className="w-full max-w-5xl mx-auto flex items-center justify-between py-3 sm:py-6 px-2.5 sm:px-3 select-none">
       {/* Logo */}
-      <div className="flex items-center gap-1.5 group cursor-pointer">
+      <div className="flex items-center gap-1 group cursor-pointer shrink-0">
         <div className="relative">
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-900 font-display flex items-center gap-1">
+          <h1 className="text-xl sm:text-3xl font-black tracking-tight text-zinc-900 font-display flex items-center gap-1">
             <span>GATE Tracker</span>
-            <span className="text-emerald-500 font-hand text-xl font-bold">彡</span>
+            <span className="text-emerald-500 font-hand text-lg sm:text-xl font-bold">彡</span>
           </h1>
           {/* Hand-drawn marker green underline */}
-          <div className="h-1 w-16 bg-emerald-400 rounded-full mt-0.5 group-hover:w-full transition-all duration-300" />
+          <div className="h-0.5 sm:h-1 w-12 sm:w-16 bg-emerald-400 rounded-full mt-0.5 group-hover:w-full transition-all duration-300" />
         </div>
       </div>
 
-      {/* Right Controls: Date Button & User Avatar / Sign In */}
-      <div className="flex items-center gap-2 sm:gap-3">
-        {/* Date: Compact icon button on mobile, pill on sm+ */}
-        <div className="relative">
-          <div className="hidden sm:flex px-3.5 py-1.5 sm:px-4 sm:py-1.5 rounded-full border-2 border-zinc-800 bg-white font-bold text-xs sm:text-sm text-zinc-800 shadow-xs items-center gap-1.5 font-display">
-            <CalendarIcon className="w-3.5 h-3.5 text-zinc-700" />
-            <span>{currentDateText}</span>
-          </div>
-
-          <button
-            onClick={() => alert(`Today is ${currentDateText}`)}
-            className="sm:hidden w-9 h-9 rounded-full border-2 border-zinc-800 bg-white hover:bg-zinc-50 flex items-center justify-center text-zinc-800 shadow-xs active:scale-95 transition-all"
-            aria-label="Today's date"
-            title={`Today is ${currentDateText}`}
-          >
-            <CalendarIcon className="w-4 h-4 text-zinc-800" />
-          </button>
+      {/* Right Controls: Date Pill & User Avatar / Sign In */}
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+        {/* Date Pill - Compact on Mobile, Full on Desktop */}
+        <div className="px-2.5 py-1 sm:px-4 sm:py-1.5 rounded-full border-2 border-zinc-800 bg-white font-bold text-xs sm:text-sm text-zinc-800 shadow-xs flex items-center gap-1 sm:gap-1.5 font-display shrink-0">
+          <CalendarIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-zinc-700 shrink-0" />
+          <span className="sm:hidden">{compactDateText}</span>
+          <span className="hidden sm:inline">{currentDateText}</span>
         </div>
 
         {/* User Profile Avatar with Neon Auth indicator or Sign In Button */}
         {user ? (
-          <div className="relative">
+          <div className="relative shrink-0">
             <button
               onClick={() => setShowAuthMenu(!showAuthMenu)}
-              className="w-9 h-9 sm:w-auto sm:px-3.5 sm:py-1.5 rounded-full border-2 border-zinc-800 bg-emerald-700 text-white sm:bg-emerald-50 sm:text-zinc-800 hover:bg-emerald-600 sm:hover:bg-emerald-100 flex items-center justify-center sm:justify-start gap-2 shadow-xs transition-all active:scale-95 cursor-pointer"
+              className="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full border-2 border-emerald-600 bg-emerald-50 hover:bg-emerald-100 flex items-center gap-1.5 sm:gap-2 text-zinc-800 shadow-xs transition-all active:scale-95 cursor-pointer"
               aria-label="User Profile"
             >
-              <div className="w-full h-full sm:w-6 sm:h-6 rounded-full flex items-center justify-center font-bold text-xs">
+              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-[11px] sm:text-xs">
                 {user.name ? user.name.substring(0, 1).toUpperCase() : "U"}
               </div>
-              <span className="font-bold text-xs sm:text-sm text-emerald-950 max-w-[100px] truncate hidden sm:inline">
+              <span className="font-bold text-xs sm:text-sm text-emerald-950 max-w-[80px] sm:max-w-[100px] truncate hidden sm:inline">
                 {user.name || "Aspirant"}
               </span>
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse hidden sm:inline-block" />
+              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500 animate-pulse" />
             </button>
 
             {/* Auth Menu Dropdown */}
             {showAuthMenu && (
               <div className="absolute right-0 top-12 z-40 w-64 rounded-2xl bg-white border-2 border-zinc-800 p-3 shadow-xl">
                 <div className="flex items-center gap-2 mb-2 pb-2 border-b border-zinc-200">
-                  <div className="w-9 h-9 rounded-full bg-emerald-700 border-2 border-zinc-800 flex items-center justify-center font-black text-white text-sm">
+                  <div className="w-9 h-9 rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center font-bold text-emerald-800 text-sm">
                     {user.name ? user.name.substring(0, 1).toUpperCase() : "U"}
                   </div>
                   <div className="flex-1 truncate">
@@ -137,10 +129,10 @@ export function Header({
         ) : (
           <button
             onClick={() => onOpenAuthModal?.("signin")}
-            className="w-9 h-9 sm:w-auto px-0 sm:px-4 sm:py-1.5 rounded-full border-2 border-zinc-800 bg-white hover:bg-emerald-50 hover:border-emerald-600 flex items-center justify-center gap-1.5 font-bold text-xs sm:text-sm text-zinc-800 shadow-xs transition-all active:scale-95 cursor-pointer font-display"
+            className="px-2.5 py-1 sm:px-4 sm:py-1.5 rounded-full border-2 border-zinc-800 bg-white hover:bg-emerald-50 hover:border-emerald-600 flex items-center gap-1 sm:gap-1.5 font-bold text-xs sm:text-sm text-zinc-800 shadow-xs transition-all active:scale-95 cursor-pointer font-display shrink-0"
           >
-            <LogIn className="w-4 h-4 text-emerald-700" />
-            <span className="hidden sm:inline">Sign In</span>
+            <LogIn className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-700" />
+            <span>Sign In</span>
           </button>
         )}
       </div>
