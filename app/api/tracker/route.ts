@@ -187,6 +187,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ status: "ok" });
     }
 
+    if (action === "update_subject") {
+      const { subjectId, totalLectures } = body;
+      const newTotal = parseInt(String(totalLectures), 10);
+      if (!subjectId || isNaN(newTotal) || newTotal < 1) {
+        return NextResponse.json(
+          { status: "error", error: "Total lectures must be at least 1" },
+          { status: 400 }
+        );
+      }
+
+      await sql`
+        UPDATE subjects
+        SET total_lectures = ${newTotal},
+            completed_lectures = LEAST(completed_lectures, ${newTotal})
+        WHERE id = ${subjectId} AND user_id = ${userId}
+      `;
+
+      return NextResponse.json({ status: "ok" });
+    }
+
     if (action === "delete_subject") {
       const { subjectId } = body;
       await sql`DELETE FROM subjects WHERE id = ${subjectId} AND user_id = ${userId}`;

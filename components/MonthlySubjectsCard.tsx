@@ -19,8 +19,10 @@ import {
   Trash2,
   CalendarPlus,
   CheckCircle2,
+  Edit3,
 } from "lucide-react";
 import confetti from "canvas-confetti";
+import { EditSubjectModal } from "./EditSubjectModal";
 
 export interface Subject {
   id: string;
@@ -80,6 +82,7 @@ interface MonthlySubjectsCardProps {
   onRemoveFromMonth: (subjectId: string, month: string) => Promise<void>;
   onDeleteSubject: (subjectId: string) => Promise<void>;
   onAddExistingToMonth: (subjectId: string, month: string) => Promise<void>;
+  onUpdateSubjectTotal?: (subjectId: string, newTotal: number) => Promise<void>;
 }
 
 export function MonthlySubjectsCard({
@@ -93,10 +96,12 @@ export function MonthlySubjectsCard({
   onRemoveFromMonth,
   onDeleteSubject,
   onAddExistingToMonth,
+  onUpdateSubjectTotal,
 }: MonthlySubjectsCardProps) {
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [showExistingDropdown, setShowExistingDropdown] = useState(false);
   const [loadingSubjectId, setLoadingSubjectId] = useState<string | null>(null);
+  const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
 
   // Helper for subject icons
   const renderIcon = (iconName: string) => {
@@ -397,10 +402,21 @@ export function MonthlySubjectsCard({
                                       setActiveMenuId(null);
                                       await onToggleUrgent(subject.id, monthId, isUrgent);
                                     }}
-                                    className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-800 hover:bg-zinc-100 flex items-center gap-2"
+                                    className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-800 hover:bg-zinc-100 flex items-center gap-2 cursor-pointer"
                                   >
                                     <Bell className="w-3.5 h-3.5 text-zinc-600" />
                                     <span>{isUrgent ? "Unmark Urgent" : "Mark as Urgent"}</span>
+                                  </button>
+
+                                  <button
+                                    onClick={() => {
+                                      setActiveMenuId(null);
+                                      setEditingSubject(subject);
+                                    }}
+                                    className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-800 hover:bg-zinc-100 flex items-center gap-2 cursor-pointer"
+                                  >
+                                    <Edit3 className="w-3.5 h-3.5 text-zinc-600" />
+                                    <span>Edit Total Lectures</span>
                                   </button>
 
                                   <button
@@ -408,7 +424,7 @@ export function MonthlySubjectsCard({
                                       setActiveMenuId(null);
                                       await onRemoveFromMonth(subject.id, monthId);
                                     }}
-                                    className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold text-amber-700 hover:bg-amber-50 flex items-center gap-2"
+                                    className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold text-amber-700 hover:bg-amber-50 flex items-center gap-2 cursor-pointer"
                                   >
                                     <CalendarPlus className="w-3.5 h-3.5" />
                                     <span>Remove from {monthName}</span>
@@ -449,9 +465,16 @@ export function MonthlySubjectsCard({
 
                       {/* Bottom Row: Lectures Count & Percentage Pill */}
                       <div className="flex items-center justify-between text-xs font-bold text-zinc-800 font-display pt-0.5">
-                        <span>
-                          {subject.completed_lectures} / {subject.total_lectures} lectures
-                        </span>
+                        <button
+                          onClick={() => setEditingSubject(subject)}
+                          className="hover:underline flex items-center gap-1.5 group/edit cursor-pointer text-left"
+                          title="Click to edit total lectures"
+                        >
+                          <span>
+                            {subject.completed_lectures} / {subject.total_lectures} lectures
+                          </span>
+                          <Edit3 className="w-3 h-3 text-zinc-400 group-hover/edit:text-zinc-700 transition-colors" />
+                        </button>
                         <span
                           className={`px-2.5 py-0.5 rounded-md font-black text-xs ${theme.badge}`}
                         >
@@ -517,9 +540,16 @@ export function MonthlySubjectsCard({
                         </div>
 
                         <div className="flex items-center justify-end gap-2 text-sm font-semibold text-zinc-600 font-display shrink-0">
-                          <span>
-                            {subject.completed_lectures} / {subject.total_lectures}
-                          </span>
+                          <button
+                            onClick={() => setEditingSubject(subject)}
+                            className="flex items-center gap-1 hover:underline cursor-pointer group/edit text-zinc-700 hover:text-zinc-950"
+                            title="Click to edit total lectures"
+                          >
+                            <span>
+                              {subject.completed_lectures} / {subject.total_lectures}
+                            </span>
+                            <Edit3 className="w-3 h-3 text-zinc-400 group-hover/edit:text-zinc-700 transition-colors" />
+                          </button>
                           <span className="font-bold text-zinc-900">
                             {percent}%
                           </span>
@@ -578,10 +608,21 @@ export function MonthlySubjectsCard({
                                     setActiveMenuId(null);
                                     await onToggleUrgent(subject.id, monthId, isUrgent);
                                   }}
-                                  className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-800 hover:bg-zinc-100 flex items-center gap-2"
+                                  className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-800 hover:bg-zinc-100 flex items-center gap-2 cursor-pointer"
                                 >
                                   <Bell className="w-3.5 h-3.5 text-zinc-600" />
                                   <span>{isUrgent ? "Unmark Urgent" : "Mark as Urgent"}</span>
+                                </button>
+
+                                <button
+                                  onClick={() => {
+                                    setActiveMenuId(null);
+                                    setEditingSubject(subject);
+                                  }}
+                                  className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-800 hover:bg-zinc-100 flex items-center gap-2 cursor-pointer"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5 text-zinc-600" />
+                                  <span>Edit Total Lectures</span>
                                 </button>
 
                                 <button
@@ -589,7 +630,7 @@ export function MonthlySubjectsCard({
                                     setActiveMenuId(null);
                                     await onRemoveFromMonth(subject.id, monthId);
                                   }}
-                                  className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold text-amber-700 hover:bg-amber-50 flex items-center gap-2"
+                                  className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold text-amber-700 hover:bg-amber-50 flex items-center gap-2 cursor-pointer"
                                 >
                                   <CalendarPlus className="w-3.5 h-3.5" />
                                   <span>Remove from {monthName}</span>
@@ -622,6 +663,18 @@ export function MonthlySubjectsCard({
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Edit Subject Total Lectures Modal */}
+      <EditSubjectModal
+        isOpen={Boolean(editingSubject)}
+        subject={editingSubject}
+        onClose={() => setEditingSubject(null)}
+        onSave={async (subjectId, newTotal) => {
+          if (onUpdateSubjectTotal) {
+            await onUpdateSubjectTotal(subjectId, newTotal);
+          }
+        }}
+      />
     </div>
   );
 }
