@@ -47,3 +47,4 @@ try {
     Write-Host "`nShutting down server (PID: $($proc.Id))..."
     cmd.exe /c "taskkill /PID $($proc.Id) /T /F" 2>&1 | Out-Null
 }
+
