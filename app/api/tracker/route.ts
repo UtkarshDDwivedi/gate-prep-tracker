@@ -2,23 +2,32 @@ import { NextRequest, NextResponse } from "next/server";
 import { sql, ensureDbSchema } from "@/lib/db";
 import { auth } from "@/lib/auth/server";
 
-async function getActiveUserId(): Promise<string> {
+async function getAuthenticatedUserId(): Promise<string | null> {
   try {
     const session = await auth.getSession();
     if (session?.data?.user?.id) {
       return session.data.user.id;
     }
   } catch {
-    // unauthenticated fallback
+    // unauthenticated context
   }
-  return "default_user";
+  return null;
 }
 
 export async function GET(request: NextRequest) {
   try {
     void request;
     await ensureDbSchema();
-    const userId = await getActiveUserId();
+    const userId = await getAuthenticatedUserId();
+
+    // Unauthenticated users see zero subjects
+    if (!userId) {
+      return NextResponse.json({
+        status: "ok",
+        authenticated: false,
+        subjects: [],
+      });
+    }
 
     const subjects = await sql`
       SELECT 
@@ -46,6 +55,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       status: "ok",
+      authenticated: true,
       userId,
       subjects,
     });
@@ -58,7 +68,20 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await ensureDbSchema();
-    const userId = await getActiveUserId();
+    const userId = await getAuthenticatedUserId();
+
+    // Reject mutations from unauthenticated users with 401
+    if (!userId) {
+      return NextResponse.json(
+        {
+          status: "error",
+          error: "Authentication required. Please sign in to manage your GATE preparation subjects.",
+          code: "UNAUTHENTICATED",
+        },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { action } = body;
 

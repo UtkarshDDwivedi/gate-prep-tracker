@@ -7,6 +7,7 @@ import { MonthlyProgressCard } from "./MonthlyProgressCard";
 import { MonthlySubjectsCard, Subject } from "./MonthlySubjectsCard";
 import { AddSubjectModal } from "./AddSubjectModal";
 import { AuthModal } from "./AuthModal";
+import { authClient } from "@/lib/auth/client";
 
 interface GateTrackerAppProps {
   initialSubjects: Subject[];
@@ -18,6 +19,10 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<"signin" | "signup">("signin");
+  const [authPromptMessage, setAuthPromptMessage] = useState<string | null>(null);
+
+  const session = authClient.useSession();
+  const isAuthenticated = Boolean(session.data?.user);
 
   // Sync latest data from Neon Postgres API
   const refreshData = useCallback(async () => {
@@ -27,12 +32,32 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
         const json = await res.json();
         if (json.subjects) {
           setSubjects(json.subjects);
+        } else {
+          setSubjects([]);
         }
       }
     } catch (err) {
       console.error("Failed to refresh tracker data from database:", err);
     }
   }, []);
+
+  // Helper to intercept unauthenticated actions and prompt for login
+  const requireAuth = (notice: string = "Please sign in to manage your GATE preparation."): boolean => {
+    if (!isAuthenticated) {
+      setAuthPromptMessage(notice);
+      setAuthModalMode("signin");
+      setIsAuthModalOpen(true);
+      return false;
+    }
+    return true;
+  };
+
+  const handleOpenAddModal = () => {
+    if (!requireAuth("Please sign in or create an account to start adding your GATE subjects.")) {
+      return;
+    }
+    setIsAddModalOpen(true);
+  };
 
   // Selected month metadata
   const currentMonthInfo = useMemo(() => {
@@ -101,8 +126,12 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
     };
   }, [selectedMonth, monthSubjects]);
 
-  // Handlers
+  // Handlers guarded with requireAuth
   const handleLogLecture = async (subjectId: string, delta: number) => {
+    if (!requireAuth("Please sign in or create an account to log completed lectures.")) {
+      return;
+    }
+
     // Optimistic UI update
     setSubjects((prev) =>
       prev.map((s) => {
@@ -135,6 +164,10 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
     month: string,
     currentUrgent: boolean
   ) => {
+    if (!requireAuth("Please sign in or create an account to update urgent subject plans.")) {
+      return;
+    }
+
     const nextUrgent = !currentUrgent;
 
     // Optimistic UI update
@@ -177,6 +210,10 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
     month: string;
     isUrgent: boolean;
   }) => {
+    if (!requireAuth("Please sign in or create an account to add subjects to your GATE plan.")) {
+      return;
+    }
+
     try {
       const res = await fetch("/api/tracker", {
         method: "POST",
@@ -196,6 +233,10 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
   };
 
   const handleRemoveFromMonth = async (subjectId: string, month: string) => {
+    if (!requireAuth("Please sign in or create an account to modify monthly plans.")) {
+      return;
+    }
+
     // Optimistic UI update
     setSubjects((prev) =>
       prev.map((s) => {
@@ -226,6 +267,10 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
   };
 
   const handleDeleteSubject = async (subjectId: string) => {
+    if (!requireAuth("Please sign in or create an account to delete subjects.")) {
+      return;
+    }
+
     // Optimistic UI update
     setSubjects((prev) => prev.filter((s) => s.id !== subjectId));
 
@@ -245,6 +290,10 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
   };
 
   const handleAddExistingToMonth = async (subjectId: string, month: string) => {
+    if (!requireAuth("Please sign in or create an account to carry over subjects.")) {
+      return;
+    }
+
     // Optimistic UI update
     setSubjects((prev) =>
       prev.map((s) => {
@@ -318,7 +367,7 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
               monthId={selectedMonth}
               subjects={monthSubjects}
               allSubjects={subjects}
-              onOpenAddModal={() => setIsAddModalOpen(true)}
+              onOpenAddModal={handleOpenAddModal}
               onLogLecture={handleLogLecture}
               onToggleUrgent={handleToggleUrgent}
               onRemoveFromMonth={handleRemoveFromMonth}
@@ -341,7 +390,11 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
       <AuthModal
         isOpen={isAuthModalOpen}
         initialMode={authModalMode}
-        onClose={() => setIsAuthModalOpen(false)}
+        promptMessage={authPromptMessage}
+        onClose={() => {
+          setIsAuthModalOpen(false);
+          setAuthPromptMessage(null);
+        }}
         onSuccess={refreshData}
       />
     </div>

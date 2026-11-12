@@ -10,6 +10,7 @@ interface AuthModalProps {
   onClose: () => void;
   onSuccess: () => void;
   initialMode?: "signin" | "signup";
+  promptMessage?: string | null;
 }
 
 export function AuthModal({
@@ -17,6 +18,7 @@ export function AuthModal({
   onClose,
   onSuccess,
   initialMode = "signin",
+  promptMessage,
 }: AuthModalProps) {
   const [mode, setMode] = useState<"signin" | "signup">(initialMode);
   const [name, setName] = useState("");
@@ -132,6 +134,13 @@ export function AuthModal({
             </div>
 
             {/* Mode Switch Tabs */}
+            {promptMessage && (
+              <div className="mb-4 p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2">
+                <span className="text-base shrink-0">🔒</span>
+                <span className="font-semibold">{promptMessage}</span>
+              </div>
+            )}
+
             <div className="flex rounded-2xl bg-zinc-100 p-1 mb-5 border border-zinc-200">
               <button
                 type="button"
@@ -281,3 +290,4 @@ export function AuthModal({
     </AnimatePresence>
   );
 }
+
