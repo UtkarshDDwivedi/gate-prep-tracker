@@ -14,37 +14,52 @@ interface HeaderProps {
 
 const emptySubscribe = () => () => {};
 
+const SERVER_FULL_DATE = "Nov 13, 2026";
+const SERVER_COMPACT_DATE = "Nov 13";
+
+function getClientFullDate(): string {
+  if (typeof window === "undefined") return SERVER_FULL_DATE;
+  return new Date().toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function getClientCompactDate(): string {
+  if (typeof window === "undefined") return SERVER_COMPACT_DATE;
+  return new Date().toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+}
+
+const getServerFullDate = () => SERVER_FULL_DATE;
+const getServerCompactDate = () => SERVER_COMPACT_DATE;
+
 export function Header({
   currentDateText,
   compactDateText,
   onOpenAuthModal,
   onRefreshData,
 }: HeaderProps) {
-  const dateInfo = useSyncExternalStore(
+  const clientFullDate = useSyncExternalStore(
     emptySubscribe,
-    () => {
-      const now = new Date();
-      return {
-        full: now.toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        }),
-        compact: now.toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-        }),
-      };
-    },
-    () => ({ full: "Nov 13, 2026", compact: "Nov 13" })
+    getClientFullDate,
+    getServerFullDate
+  );
+  const clientCompactDate = useSyncExternalStore(
+    emptySubscribe,
+    getClientCompactDate,
+    getServerCompactDate
   );
 
   const [showAuthMenu, setShowAuthMenu] = useState(false);
   const session = authClient.useSession();
   const user = session.data?.user;
 
-  const displayFullDate = currentDateText || dateInfo.full;
-  const displayCompactDate = compactDateText || dateInfo.compact;
+  const displayFullDate = currentDateText || clientFullDate;
+  const displayCompactDate = compactDateText || clientCompactDate;
 
   useEffect(() => {
     if (!showAuthMenu) return;
