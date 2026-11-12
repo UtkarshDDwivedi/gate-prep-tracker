@@ -106,3 +106,4 @@ export function Header({ currentDateText = "Nov 18, 2026" }: HeaderProps) {
     </header>
   );
 }
+

@@ -203,3 +203,4 @@ export function StudyCat({ className = "" }: { className?: string }) {
     </motion.div>
   );
 }
+
