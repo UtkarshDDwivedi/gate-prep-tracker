@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
         s.icon,
         s.total_lectures,
         s.completed_lectures,
+        (s.is_completed OR s.completed_lectures >= s.total_lectures) as is_completed,
         s.created_at,
         COALESCE(
           json_agg(
@@ -86,19 +87,21 @@ export async function POST(request: NextRequest) {
     const { action } = body;
 
     if (action === "create_subject") {
-      const { title, icon = "laptop", totalLectures, completedLectures = 0, month, isUrgent = false } = body;
+      const { title, icon = "laptop", totalLectures, completedLectures = 0, month, isUrgent = false, isCompleted = false } = body;
       const id = "sub-" + Date.now() + "-" + Math.random().toString(36).substring(2, 6);
+      const isComp = Boolean(isCompleted || Number(completedLectures) >= Number(totalLectures));
+      const finalCompleted = isComp ? Number(totalLectures) : Number(completedLectures);
 
       await sql`
-        INSERT INTO subjects (id, user_id, title, icon, total_lectures, completed_lectures)
-        VALUES (${id}, ${userId}, ${title}, ${icon}, ${Number(totalLectures)}, ${Number(completedLectures)})
+        INSERT INTO subjects (id, user_id, title, icon, total_lectures, completed_lectures, is_completed)
+        VALUES (${id}, ${userId}, ${title}, ${icon}, ${Number(totalLectures)}, ${finalCompleted}, ${isComp})
       `;
 
-      if (Number(completedLectures) > 0) {
+      if (finalCompleted > 0) {
         const logId = "log-init-" + id;
         await sql`
           INSERT INTO lecture_logs (id, subject_id, lectures_completed, log_date, created_at)
-          VALUES (${logId}, ${id}, ${Number(completedLectures)}, CURRENT_DATE, NOW())
+          VALUES (${logId}, ${id}, ${finalCompleted}, CURRENT_DATE, NOW())
         `;
       }
 
@@ -114,13 +117,41 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ status: "ok", id });
     }
 
+    if (action === "toggle_subject_completed") {
+      const { subjectId, completed } = body;
+      const isComp = Boolean(completed);
+
+      await sql`
+        UPDATE subjects 
+        SET is_completed = ${isComp},
+            completed_lectures = CASE 
+              WHEN ${isComp} THEN total_lectures 
+              WHEN completed_lectures >= total_lectures THEN 0 
+              ELSE completed_lectures 
+            END
+        WHERE id = ${subjectId} AND user_id = ${userId}
+      `;
+
+      const updated = await sql`
+        SELECT id, title, completed_lectures, total_lectures, is_completed 
+        FROM subjects 
+        WHERE id = ${subjectId} AND user_id = ${userId}
+      `;
+
+      return NextResponse.json({ status: "ok", subject: updated[0] });
+    }
+
     if (action === "log_lecture") {
       const { subjectId, delta = 1 } = body;
       
       // Update subject completed lectures clamped between 0 and total_lectures
       await sql`
         UPDATE subjects 
-        SET completed_lectures = GREATEST(0, LEAST(total_lectures, completed_lectures + ${Number(delta)}))
+        SET completed_lectures = GREATEST(0, LEAST(total_lectures, completed_lectures + ${Number(delta)})),
+            is_completed = CASE 
+              WHEN GREATEST(0, LEAST(total_lectures, completed_lectures + ${Number(delta)})) >= total_lectures THEN TRUE 
+              ELSE FALSE 
+            END
         WHERE id = ${subjectId} AND user_id = ${userId}
       `;
 

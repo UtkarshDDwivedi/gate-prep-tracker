@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Calendar as CalendarIcon, LogOut, LogIn, Clock } from "lucide-react";
+import { Calendar as CalendarIcon, LogOut, LogIn, Clock, BookOpen } from "lucide-react";
 import { authClient } from "@/lib/auth/client";
 
 interface HeaderProps {
@@ -21,6 +21,31 @@ export function Header({
   const [showAuthMenu, setShowAuthMenu] = useState(false);
   const session = authClient.useSession();
   const user = session.data?.user;
+
+  useEffect(() => {
+    if (!showAuthMenu) return;
+
+    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target && !target.closest("[data-auth-menu]")) {
+        setShowAuthMenu(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setShowAuthMenu(false);
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showAuthMenu]);
 
   const handleSignOut = async () => {
     try {
@@ -59,8 +84,18 @@ export function Header({
         </div>
       </Link>
 
-      {/* Right Controls: History + Date Pill & User Avatar / Sign In */}
+      {/* Right Controls: Subjects + History + Date Pill & User Avatar / Sign In */}
       <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+        {/* Subjects Page Link Button */}
+        <Link
+          href="/subjects"
+          className="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full border-2 border-zinc-800 bg-white hover:bg-emerald-50 hover:border-emerald-500 font-bold text-xs sm:text-sm text-zinc-800 shadow-xs flex items-center gap-1 sm:gap-1.5 font-display shrink-0 transition-all active:scale-95"
+          title="View all GATE syllabus subjects"
+        >
+          <BookOpen className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+          <span>Subjects</span>
+        </Link>
+
         {/* History Page Link Button */}
         <Link
           href="/history"
@@ -80,7 +115,7 @@ export function Header({
 
         {/* User Profile Avatar with Neon Auth indicator or Sign In Button */}
         {user ? (
-          <div className="relative shrink-0">
+          <div className="relative shrink-0" data-auth-menu>
             <button
               onClick={() => setShowAuthMenu(!showAuthMenu)}
               className="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full border-2 border-emerald-600 bg-emerald-50 hover:bg-emerald-100 flex items-center gap-1.5 sm:gap-2 text-zinc-800 shadow-xs transition-all active:scale-95 cursor-pointer"
@@ -113,6 +148,15 @@ export function Header({
                 </div>
 
                 <div className="space-y-1 text-xs">
+                  <Link
+                    href="/subjects"
+                    onClick={() => setShowAuthMenu(false)}
+                    className="w-full text-left px-2.5 py-1.5 rounded-xl font-bold text-zinc-800 hover:bg-emerald-50 hover:text-emerald-950 flex items-center gap-2 transition-colors cursor-pointer"
+                  >
+                    <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>GATE Subjects</span>
+                  </Link>
+
                   <Link
                     href="/history"
                     onClick={() => setShowAuthMenu(false)}

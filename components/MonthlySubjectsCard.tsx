@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Layers,
@@ -30,6 +30,7 @@ export interface Subject {
   icon: string;
   total_lectures: number;
   completed_lectures: number;
+  is_completed?: boolean;
   monthly_plans: Array<{
     month: string;
     is_urgent: boolean;
@@ -102,6 +103,40 @@ export function MonthlySubjectsCard({
   const [showExistingDropdown, setShowExistingDropdown] = useState(false);
   const [loadingSubjectId, setLoadingSubjectId] = useState<string | null>(null);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
+
+  // Close menus when clicking outside or pressing Escape
+  useEffect(() => {
+    if (!activeMenuId && !showExistingDropdown) return;
+
+    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+
+      if (activeMenuId && !target.closest(`[data-subject-menu="${activeMenuId}"]`)) {
+        setActiveMenuId(null);
+      }
+      if (showExistingDropdown && !target.closest("[data-existing-dropdown]")) {
+        setShowExistingDropdown(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setActiveMenuId(null);
+        setShowExistingDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [activeMenuId, showExistingDropdown]);
 
   // Helper for subject icons
   const renderIcon = (iconName: string) => {
@@ -179,7 +214,7 @@ export function MonthlySubjectsCard({
 
           <div className="flex items-center gap-1.5 sm:gap-2">
             {availableExisting.length > 0 && (
-              <div className="relative">
+              <div className="relative" data-existing-dropdown>
                 <button
                   onClick={() => setShowExistingDropdown(!showExistingDropdown)}
                   className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full border border-zinc-300 text-[11px] sm:text-xs font-semibold text-zinc-700 hover:bg-zinc-50 flex items-center gap-1 transition-all"
@@ -378,7 +413,7 @@ export function MonthlySubjectsCard({
                           </div>
 
                           {/* 3-Dots Menu */}
-                          <div className="relative">
+                          <div className="relative" data-subject-menu={subject.id}>
                             <button
                               onClick={() =>
                                 setActiveMenuId(activeMenuId === subject.id ? null : subject.id)
@@ -584,7 +619,7 @@ export function MonthlySubjectsCard({
                         </div>
 
                         {/* Desktop Dropdown Options Menu */}
-                        <div className="relative">
+                        <div className="relative" data-subject-menu={subject.id}>
                           <button
                             onClick={() =>
                               setActiveMenuId(activeMenuId === subject.id ? null : subject.id)

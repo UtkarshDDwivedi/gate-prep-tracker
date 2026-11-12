@@ -24,8 +24,13 @@ export async function ensureDbSchema() {
       icon TEXT NOT NULL DEFAULT 'laptop',
       total_lectures INTEGER NOT NULL DEFAULT 30,
       completed_lectures INTEGER NOT NULL DEFAULT 0,
+      is_completed BOOLEAN NOT NULL DEFAULT FALSE,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+  `;
+
+  await sql`
+    ALTER TABLE subjects ADD COLUMN IF NOT EXISTS is_completed BOOLEAN NOT NULL DEFAULT FALSE;
   `;
 
   await sql`

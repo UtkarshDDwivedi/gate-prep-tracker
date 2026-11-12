@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -18,7 +18,8 @@ import { MONTHS } from "./RoadToGate";
 
 interface AddSubjectModalProps {
   isOpen: boolean;
-  initialMonth: string;
+  initialMonth?: string;
+  allowNoMonth?: boolean;
   onClose: () => void;
   onCreate: (subjectData: {
     title: string;
@@ -43,7 +44,8 @@ const ICONS = [
 
 export function AddSubjectModal({
   isOpen,
-  initialMonth,
+  initialMonth = "2026-11",
+  allowNoMonth = false,
   onClose,
   onCreate,
 }: AddSubjectModalProps) {
@@ -54,6 +56,15 @@ export function AddSubjectModal({
   const [selectedMonth, setSelectedMonth] = useState(initialMonth);
   const [isUrgent, setIsUrgent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -84,13 +95,20 @@ export function AddSubjectModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-xs">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 15 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="relative w-full max-w-lg rounded-3xl bg-[#FAF9F5] border-2 border-zinc-900 p-6 sm:p-7 shadow-[5px_6px_0px_rgba(0,0,0,0.15)] overflow-hidden"
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-xs cursor-pointer"
+        onClick={onClose}
+      >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="w-full max-w-lg cursor-default"
         >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 15 }}
+            className="relative w-full rounded-3xl bg-[#FAF9F5] border-2 border-zinc-900 p-6 sm:p-7 shadow-[5px_6px_0px_rgba(0,0,0,0.15)] overflow-hidden"
+          >
           {/* Close button */}
           <button
             onClick={onClose}
@@ -196,6 +214,9 @@ export function AddSubjectModal({
                 onChange={(e) => setSelectedMonth(e.target.value)}
                 className="w-full px-3.5 py-2 rounded-xl border-2 border-zinc-800 bg-white text-zinc-900 font-semibold text-sm shadow-xs"
               >
+                {allowNoMonth && (
+                  <option value="">Unscheduled (Plan later)</option>
+                )}
                 {MONTHS.filter((m) => !m.isCutoff).map((m) => (
                   <option key={m.id} value={m.id}>
                     {m.name}
@@ -204,25 +225,27 @@ export function AddSubjectModal({
               </select>
             </div>
 
-            {/* Urgent Flag Toggle */}
-            <div className="p-3.5 rounded-2xl border-2 border-zinc-800 bg-amber-50/70 flex items-start gap-3">
-              <input
-                id="urgent-checkbox"
-                type="checkbox"
-                checked={isUrgent}
-                onChange={(e) => setIsUrgent(e.target.checked)}
-                className="mt-0.5 w-5 h-5 rounded-md border-2 border-zinc-800 text-rose-600 focus:ring-rose-500 cursor-pointer"
-              />
-              <label htmlFor="urgent-checkbox" className="text-xs sm:text-sm text-zinc-800 cursor-pointer">
-                <span className="font-bold text-rose-700 flex items-center gap-1">
-                  <Bell className="w-3.5 h-3.5 fill-rose-600" />
-                  Urgent Subject for this month
-                </span>
-                <span className="text-zinc-600 block text-[11px] mt-0.5 leading-snug">
-                  Must be completed in this month. Contributes directly to your daily required pace.
-                </span>
-              </label>
-            </div>
+            {/* Urgent Flag Toggle - only visible if a month is selected */}
+            {selectedMonth && (
+              <div className="p-3.5 rounded-2xl border-2 border-zinc-800 bg-amber-50/70 flex items-start gap-3">
+                <input
+                  id="urgent-checkbox"
+                  type="checkbox"
+                  checked={isUrgent}
+                  onChange={(e) => setIsUrgent(e.target.checked)}
+                  className="mt-0.5 w-5 h-5 rounded-md border-2 border-zinc-800 text-rose-600 focus:ring-rose-500 cursor-pointer"
+                />
+                <label htmlFor="urgent-checkbox" className="text-xs sm:text-sm text-zinc-800 cursor-pointer">
+                  <span className="font-bold text-rose-700 flex items-center gap-1">
+                    <Bell className="w-3.5 h-3.5 fill-rose-600" />
+                    Urgent Subject for this month
+                  </span>
+                  <span className="text-zinc-600 block text-[11px] mt-0.5 leading-snug">
+                    Must be completed in this month. Contributes directly to your daily required pace.
+                  </span>
+                </label>
+              </div>
+            )}
 
             {/* Actions */}
             <div className="flex items-center justify-end gap-3 pt-2">
@@ -244,6 +267,7 @@ export function AddSubjectModal({
             </div>
           </form>
         </motion.div>
+        </div>
       </div>
     </AnimatePresence>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -225,17 +225,34 @@ export function EditSubjectModal({
   onClose,
   onSave,
 }: EditSubjectModalProps) {
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen || !subject) return null;
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-xs">
-        <EditSubjectForm
-          key={subject.id}
-          subject={subject}
-          onClose={onClose}
-          onSave={onSave}
-        />
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-xs cursor-pointer"
+        onClick={onClose}
+      >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="w-full max-w-md cursor-default"
+        >
+          <EditSubjectForm
+            key={subject.id}
+            subject={subject}
+            onClose={onClose}
+            onSave={onSave}
+          />
+        </div>
       </div>
     </AnimatePresence>
   );
