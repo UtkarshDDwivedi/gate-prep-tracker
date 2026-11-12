@@ -22,12 +22,23 @@ export function Header({
   const handleSignOut = async () => {
     try {
       await authClient.signOut();
+    } catch (err) {
+      console.warn("Upstream sign-out warning (cleaning up session locally):", err);
+    } finally {
       setShowAuthMenu(false);
+      // Clean up any neon-auth client cookies
+      if (typeof document !== "undefined") {
+        document.cookie.split(";").forEach((c) => {
+          const name = c.split("=")[0].trim();
+          if (name.includes("neon-auth")) {
+            document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+          }
+        });
+      }
       if (onRefreshData) {
         onRefreshData();
       }
-    } catch (err) {
-      console.error("Sign out error:", err);
+      window.location.reload();
     }
   };
 
