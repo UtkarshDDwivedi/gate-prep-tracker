@@ -1,3 +1,8 @@
+import dns from "node:dns";
+if (dns && typeof dns.setDefaultResultOrder === "function") {
+  dns.setDefaultResultOrder("ipv4first");
+}
+
 import { neon } from "@neondatabase/serverless";
 
 if (!process.env.DATABASE_URL) {

@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Calendar as CalendarIcon, LogOut, CheckCircle, LogIn } from "lucide-react";
+import Link from "next/link";
+import { Calendar as CalendarIcon, LogOut, LogIn, Clock } from "lucide-react";
 import { authClient } from "@/lib/auth/client";
 
 interface HeaderProps {
@@ -47,7 +48,7 @@ export function Header({
   return (
     <header className="w-full max-w-5xl mx-auto flex items-center justify-between py-3 sm:py-6 px-2.5 sm:px-3 select-none">
       {/* Logo */}
-      <div className="flex items-center gap-1 group cursor-pointer shrink-0">
+      <Link href="/" className="flex items-center gap-1 group cursor-pointer shrink-0">
         <div className="relative">
           <h1 className="text-xl sm:text-3xl font-black tracking-tight text-zinc-900 font-display flex items-center gap-1">
             <span>GATE Tracker</span>
@@ -56,10 +57,20 @@ export function Header({
           {/* Hand-drawn marker green underline */}
           <div className="h-0.5 sm:h-1 w-12 sm:w-16 bg-emerald-400 rounded-full mt-0.5 group-hover:w-full transition-all duration-300" />
         </div>
-      </div>
+      </Link>
 
-      {/* Right Controls: Date Pill & User Avatar / Sign In */}
+      {/* Right Controls: History + Date Pill & User Avatar / Sign In */}
       <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+        {/* History Page Link Button */}
+        <Link
+          href="/history"
+          className="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full border-2 border-zinc-800 bg-white hover:bg-amber-50 hover:border-amber-500 font-bold text-xs sm:text-sm text-zinc-800 shadow-xs flex items-center gap-1 sm:gap-1.5 font-display shrink-0 transition-all active:scale-95"
+          title="View your daily lecture history"
+        >
+          <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+          <span>History</span>
+        </Link>
+
         {/* Date Pill - Compact on Mobile, Full on Desktop */}
         <div className="px-2.5 py-1 sm:px-4 sm:py-1.5 rounded-full border-2 border-zinc-800 bg-white font-bold text-xs sm:text-sm text-zinc-800 shadow-xs flex items-center gap-1 sm:gap-1.5 font-display shrink-0">
           <CalendarIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-zinc-700 shrink-0" />
@@ -102,22 +113,18 @@ export function Header({
                 </div>
 
                 <div className="space-y-1 text-xs">
-                  <div className="flex items-center justify-between px-2 py-1.5 text-zinc-600">
-                    <span>Database:</span>
-                    <span className="font-bold text-emerald-700 flex items-center gap-1">
-                      <CheckCircle className="w-3 h-3 text-emerald-600" /> Neon Postgres
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between px-2 py-1.5 text-zinc-600">
-                    <span>Auth:</span>
-                    <span className="font-bold text-emerald-700 flex items-center gap-1">
-                      <CheckCircle className="w-3 h-3 text-emerald-600" /> Neon Auth
-                    </span>
-                  </div>
+                  <Link
+                    href="/history"
+                    onClick={() => setShowAuthMenu(false)}
+                    className="w-full text-left px-2.5 py-1.5 rounded-xl font-bold text-zinc-800 hover:bg-emerald-50 hover:text-emerald-950 flex items-center gap-2 transition-colors cursor-pointer"
+                  >
+                    <Clock className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Study History</span>
+                  </Link>
 
                   <button
                     onClick={handleSignOut}
-                    className="w-full mt-2 text-left px-2.5 py-1.5 rounded-xl font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors cursor-pointer"
+                    className="w-full mt-1 text-left px-2.5 py-1.5 rounded-xl font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors cursor-pointer"
                   >
                     <LogOut className="w-3.5 h-3.5" />
                     <span>Sign Out</span>
@@ -139,4 +146,3 @@ export function Header({
     </header>
   );
 }
-

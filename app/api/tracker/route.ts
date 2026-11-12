@@ -94,6 +94,14 @@ export async function POST(request: NextRequest) {
         VALUES (${id}, ${userId}, ${title}, ${icon}, ${Number(totalLectures)}, ${Number(completedLectures)})
       `;
 
+      if (Number(completedLectures) > 0) {
+        const logId = "log-init-" + id;
+        await sql`
+          INSERT INTO lecture_logs (id, subject_id, lectures_completed, log_date, created_at)
+          VALUES (${logId}, ${id}, ${Number(completedLectures)}, CURRENT_DATE, NOW())
+        `;
+      }
+
       if (month) {
         const planId = "plan-" + Date.now() + "-" + Math.random().toString(36).substring(2, 6);
         await sql`
