@@ -368,29 +368,36 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
           monthlyStats={monthlyStats}
         />
 
-        {/* Progress & Plan Card (Unified compact layout matching mobile mockup) */}
-        <MonthlyProgressCard
-          monthName={currentMonthInfo.name}
-          monthId={selectedMonth}
-          totalLectures={selectedStats.total}
-          completedLectures={selectedStats.completed}
-          urgentRemaining={selectedStats.urgentRemaining}
-          daysRemaining={selectedStats.daysRemaining}
-        />
+        {/* Lower Two Cards Grid (Matches Mockup Layout) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          {/* Left Column: Progress & Plan (4.5 cols) */}
+          <div className="lg:col-span-5 flex">
+            <MonthlyProgressCard
+              monthName={currentMonthInfo.name}
+              monthId={selectedMonth}
+              totalLectures={selectedStats.total}
+              completedLectures={selectedStats.completed}
+              urgentRemaining={selectedStats.urgentRemaining}
+              daysRemaining={selectedStats.daysRemaining}
+            />
+          </div>
 
-        {/* Month Subjects Card (Mobile-first compact rows) */}
-        <MonthlySubjectsCard
-          monthName={currentMonthInfo.name}
-          monthId={selectedMonth}
-          subjects={monthSubjects}
-          allSubjects={subjects}
-          onOpenAddModal={handleOpenAddModal}
-          onLogLecture={handleLogLecture}
-          onToggleUrgent={handleToggleUrgent}
-          onRemoveFromMonth={handleRemoveFromMonth}
-          onDeleteSubject={handleDeleteSubject}
-          onAddExistingToMonth={handleAddExistingToMonth}
-        />
+          {/* Right Column: Month Subjects (7.5 cols) */}
+          <div className="lg:col-span-7 flex">
+            <MonthlySubjectsCard
+              monthName={currentMonthInfo.name}
+              monthId={selectedMonth}
+              subjects={monthSubjects}
+              allSubjects={subjects}
+              onOpenAddModal={handleOpenAddModal}
+              onLogLecture={handleLogLecture}
+              onToggleUrgent={handleToggleUrgent}
+              onRemoveFromMonth={handleRemoveFromMonth}
+              onDeleteSubject={handleDeleteSubject}
+              onAddExistingToMonth={handleAddExistingToMonth}
+            />
+          </div>
+        </div>
       </main>
 
       {/* Add Subject Modal */}
