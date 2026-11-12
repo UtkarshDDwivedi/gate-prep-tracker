@@ -237,6 +237,7 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
     completedLectures: number;
     month: string;
     isUrgent: boolean;
+    teacher?: string;
   }) => {
     if (!requireAuth("Please sign in or create an account to add subjects to your GATE plan.")) {
       return;
@@ -353,10 +354,21 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
     }
   };
 
-  const handleUpdateSubjectTotal = async (subjectId: string, newTotal: number) => {
+  const handleUpdateSubject = async (
+    subjectId: string,
+    data: {
+      title: string;
+      teacher: string;
+      totalLectures: number;
+      completedLectures: number;
+    }
+  ) => {
     if (!requireAuth("Please sign in or create an account to edit subject details.")) {
       return;
     }
+
+    const { title, teacher, totalLectures, completedLectures } = data;
+    const isComp = completedLectures >= totalLectures && totalLectures > 0;
 
     // Optimistic UI update
     setSubjects((prev) =>
@@ -364,8 +376,11 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
         if (s.id === subjectId) {
           return {
             ...s,
-            total_lectures: newTotal,
-            completed_lectures: Math.min(s.completed_lectures, newTotal),
+            title,
+            teacher,
+            total_lectures: totalLectures,
+            completed_lectures: completedLectures,
+            is_completed: isComp,
           };
         }
         return s;
@@ -379,11 +394,14 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
         body: JSON.stringify({
           action: "update_subject",
           subjectId,
-          totalLectures: newTotal,
+          title,
+          teacher,
+          totalLectures,
+          completedLectures,
         }),
       });
     } catch (err) {
-      console.error("Failed to update subject total:", err);
+      console.error("Failed to update subject details:", err);
       refreshData();
     }
   };
@@ -437,7 +455,7 @@ export function GateTrackerApp({ initialSubjects }: GateTrackerAppProps) {
               onRemoveFromMonth={handleRemoveFromMonth}
               onDeleteSubject={handleDeleteSubject}
               onAddExistingToMonth={handleAddExistingToMonth}
-              onUpdateSubjectTotal={handleUpdateSubjectTotal}
+              onUpdateSubject={handleUpdateSubject}
             />
           </div>
         </div>

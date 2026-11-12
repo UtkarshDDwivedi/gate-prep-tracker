@@ -200,22 +200,34 @@ export default function SubjectsPage() {
     }
   };
 
-  // Handle total lectures update
-  const handleUpdateSubjectTotal = async (subjectId: string, newTotal: number) => {
+  // Handle subject details update
+  const handleUpdateSubject = async (
+    subjectId: string,
+    data: {
+      title: string;
+      teacher: string;
+      totalLectures: number;
+      completedLectures: number;
+    }
+  ) => {
     if (!user) {
       setShowAuthModal(true);
       return;
     }
 
+    const { title, teacher, totalLectures, completedLectures } = data;
+    const isComp = completedLectures >= totalLectures && totalLectures > 0;
+
     setSubjects((prev) =>
       prev.map((s) => {
         if (s.id === subjectId) {
-          const nextCompleted = Math.min(s.completed_lectures, newTotal);
           return {
             ...s,
-            total_lectures: newTotal,
-            completed_lectures: nextCompleted,
-            is_completed: nextCompleted >= newTotal,
+            title,
+            teacher,
+            total_lectures: totalLectures,
+            completed_lectures: completedLectures,
+            is_completed: isComp,
           };
         }
         return s;
@@ -229,11 +241,14 @@ export default function SubjectsPage() {
         body: JSON.stringify({
           action: "update_subject",
           subjectId,
-          totalLectures: newTotal,
+          title,
+          teacher,
+          totalLectures,
+          completedLectures,
         }),
       });
     } catch (err) {
-      console.error("Failed to update total lectures:", err);
+      console.error("Failed to update subject details:", err);
       refreshSubjects();
     }
   };
@@ -246,6 +261,7 @@ export default function SubjectsPage() {
     completedLectures: number;
     month: string;
     isUrgent: boolean;
+    teacher?: string;
   }) => {
     if (!user) {
       setShowAuthModal(true);
@@ -569,7 +585,8 @@ export default function SubjectsPage() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className={`rounded-3xl border-2 p-4 sm:p-5 shadow-xs transition-all flex flex-col gap-3.5 ${
+                  onClick={() => setEditingSubject(subject)}
+                  className={`rounded-3xl border-2 p-4 sm:p-5 shadow-xs transition-all flex flex-col gap-3.5 cursor-pointer hover:border-zinc-400 ${
                     isCompleted
                       ? "bg-[#F3FAF4] border-emerald-400 shadow-[2px_2px_0px_rgba(16,185,129,0.2)]"
                       : `${theme.bg} ${theme.border}`
@@ -618,6 +635,14 @@ export default function SubjectsPage() {
                           )}
                         </div>
 
+                        {/* Teacher name if assigned */}
+                        {subject.teacher && (
+                          <div className="flex items-center gap-1 text-[11px] font-semibold text-zinc-600">
+                            <GraduationCap className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                            <span className="truncate max-w-[200px]">{subject.teacher}</span>
+                          </div>
+                        )}
+
                         {/* Scheduled Months Badges */}
                         <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-zinc-600">
                           {subject.monthly_plans && subject.monthly_plans.length > 0 ? (
@@ -643,7 +668,10 @@ export default function SubjectsPage() {
                     {/* Right: Quick Action Toggle */}
                     <div className="flex items-center gap-2 shrink-0">
                       <button
-                        onClick={() => handleToggleCompleted(subject)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleCompleted(subject);
+                        }}
                         disabled={isToggling}
                         className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border-2 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all shadow-xs active:scale-95 cursor-pointer font-display ${
                           isCompleted
@@ -671,7 +699,10 @@ export default function SubjectsPage() {
 
                       {/* Delete Action */}
                       <button
-                        onClick={() => handleDeleteSubject(subject)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteSubject(subject);
+                        }}
                         className="w-8 h-8 rounded-full border border-zinc-200 hover:border-rose-300 hover:bg-rose-50 text-zinc-400 hover:text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
                         title="Delete subject from syllabus"
                       >
@@ -694,16 +725,14 @@ export default function SubjectsPage() {
 
                   {/* Bottom Stats & Edit Link */}
                   <div className="flex items-center justify-between text-xs font-bold text-zinc-700 font-display pt-0.5">
-                    <button
-                      onClick={() => setEditingSubject(subject)}
-                      className="hover:underline flex items-center gap-1.5 group cursor-pointer text-zinc-700 hover:text-zinc-950"
-                      title="Click to edit total planned lectures"
+                    <div
+                      className="flex items-center gap-1.5 group text-zinc-700 hover:text-zinc-950"
                     >
                       <span>
                         {subject.completed_lectures} / {subject.total_lectures} lectures completed
                       </span>
                       <Edit3 className="w-3 h-3 text-zinc-400 group-hover:text-zinc-800 transition-colors" />
-                    </button>
+                    </div>
 
                     <span
                       className={`px-2.5 py-0.5 rounded-md font-black text-xs ${
@@ -731,12 +760,12 @@ export default function SubjectsPage() {
         onCreate={handleCreateSubject}
       />
 
-      {/* Edit Subject Total Lectures Modal */}
+      {/* Edit Subject Details Modal */}
       <EditSubjectModal
         isOpen={Boolean(editingSubject)}
         subject={editingSubject}
         onClose={() => setEditingSubject(null)}
-        onSave={handleUpdateSubjectTotal}
+        onSave={handleUpdateSubject}
       />
 
       {/* Auth Modal */}

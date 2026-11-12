@@ -13,6 +13,7 @@ import {
   BookOpen,
   Terminal,
   Bell,
+  GraduationCap,
 } from "lucide-react";
 import { MONTHS } from "./RoadToGate";
 
@@ -28,6 +29,7 @@ interface AddSubjectModalProps {
     completedLectures: number;
     month: string;
     isUrgent: boolean;
+    teacher?: string;
   }) => Promise<void>;
 }
 
@@ -50,6 +52,7 @@ export function AddSubjectModal({
   onCreate,
 }: AddSubjectModalProps) {
   const [title, setTitle] = useState("");
+  const [teacher, setTeacher] = useState("");
   const [icon, setIcon] = useState("laptop");
   const [totalLectures, setTotalLectures] = useState(30);
   const [completedLectures, setCompletedLectures] = useState(0);
@@ -81,9 +84,11 @@ export function AddSubjectModal({
         completedLectures: Number(completedLectures),
         month: selectedMonth,
         isUrgent,
+        teacher: teacher.trim(),
       });
       // Reset form
       setTitle("");
+      setTeacher("");
       setTotalLectures(30);
       setCompletedLectures(0);
       setIsUrgent(false);
@@ -140,6 +145,21 @@ export function AddSubjectModal({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Theory of Computation, Computer Networks"
+                className="w-full px-4 py-2.5 rounded-xl border-2 border-zinc-800 bg-white text-zinc-900 font-semibold focus:outline-hidden focus:ring-2 focus:ring-emerald-500 text-sm shadow-xs"
+              />
+            </div>
+
+            {/* Teacher / Faculty (Optional) */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 mb-1 font-display flex items-center gap-1.5">
+                <GraduationCap className="w-4 h-4 text-emerald-600" />
+                <span>Teacher / Faculty (Optional)</span>
+              </label>
+              <input
+                type="text"
+                value={teacher}
+                onChange={(e) => setTeacher(e.target.value)}
+                placeholder="e.g. Vishvadeep Gothi, Amit Khurana, Ravindrababu Ravula"
                 className="w-full px-4 py-2.5 rounded-xl border-2 border-zinc-800 bg-white text-zinc-900 font-semibold focus:outline-hidden focus:ring-2 focus:ring-emerald-500 text-sm shadow-xs"
               />
             </div>

@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
         s.total_lectures,
         s.completed_lectures,
         (s.is_completed OR s.completed_lectures >= s.total_lectures) as is_completed,
+        COALESCE(s.teacher, '') as teacher,
         s.created_at,
         COALESCE(
           json_agg(
@@ -87,14 +88,23 @@ export async function POST(request: NextRequest) {
     const { action } = body;
 
     if (action === "create_subject") {
-      const { title, icon = "laptop", totalLectures, completedLectures = 0, month, isUrgent = false, isCompleted = false } = body;
+      const {
+        title,
+        icon = "laptop",
+        totalLectures,
+        completedLectures = 0,
+        teacher = "",
+        month,
+        isUrgent = false,
+        isCompleted = false,
+      } = body;
       const id = "sub-" + Date.now() + "-" + Math.random().toString(36).substring(2, 6);
       const isComp = Boolean(isCompleted || Number(completedLectures) >= Number(totalLectures));
       const finalCompleted = isComp ? Number(totalLectures) : Number(completedLectures);
 
       await sql`
-        INSERT INTO subjects (id, user_id, title, icon, total_lectures, completed_lectures, is_completed)
-        VALUES (${id}, ${userId}, ${title}, ${icon}, ${Number(totalLectures)}, ${finalCompleted}, ${isComp})
+        INSERT INTO subjects (id, user_id, title, icon, total_lectures, completed_lectures, is_completed, teacher)
+        VALUES (${id}, ${userId}, ${title}, ${icon}, ${Number(totalLectures)}, ${finalCompleted}, ${isComp}, ${String(teacher || "").trim()})
       `;
 
       if (finalCompleted > 0) {
@@ -219,7 +229,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "update_subject") {
-      const { subjectId, totalLectures } = body;
+      const { subjectId, title, icon, totalLectures, completedLectures, teacher } = body;
       const newTotal = parseInt(String(totalLectures), 10);
       if (!subjectId || isNaN(newTotal) || newTotal < 1) {
         return NextResponse.json(
@@ -228,10 +238,31 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      const current = await sql`
+        SELECT completed_lectures, is_completed, title, icon, teacher
+        FROM subjects
+        WHERE id = ${subjectId} AND user_id = ${userId}
+      `;
+      if (current.length === 0) {
+        return NextResponse.json({ status: "error", error: "Subject not found" }, { status: 404 });
+      }
+
+      const existing = current[0];
+      const reqCompleted = completedLectures !== undefined ? parseInt(String(completedLectures), 10) : Number(existing.completed_lectures);
+      const newCompleted = Math.max(0, Math.min(newTotal, isNaN(reqCompleted) ? 0 : reqCompleted));
+      const isComp = newCompleted >= newTotal;
+      const newTitle = title ? String(title).trim() : existing.title;
+      const newIcon = icon ? String(icon).trim() : existing.icon;
+      const newTeacher = teacher !== undefined ? String(teacher).trim() : (existing.teacher || "");
+
       await sql`
         UPDATE subjects
         SET total_lectures = ${newTotal},
-            completed_lectures = LEAST(completed_lectures, ${newTotal})
+            completed_lectures = ${newCompleted},
+            is_completed = ${isComp},
+            title = ${newTitle},
+            icon = ${newIcon},
+            teacher = ${newTeacher}
         WHERE id = ${subjectId} AND user_id = ${userId}
       `;
 

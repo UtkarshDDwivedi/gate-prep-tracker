@@ -20,9 +20,10 @@ import {
   CalendarPlus,
   CheckCircle2,
   Edit3,
+  GraduationCap,
 } from "lucide-react";
 import confetti from "canvas-confetti";
-import { EditSubjectModal } from "./EditSubjectModal";
+import { EditSubjectModal, UpdateSubjectPayload } from "./EditSubjectModal";
 
 export interface Subject {
   id: string;
@@ -30,6 +31,7 @@ export interface Subject {
   icon: string;
   total_lectures: number;
   completed_lectures: number;
+  teacher?: string;
   is_completed?: boolean;
   monthly_plans: Array<{
     month: string;
@@ -83,6 +85,7 @@ interface MonthlySubjectsCardProps {
   onRemoveFromMonth: (subjectId: string, month: string) => Promise<void>;
   onDeleteSubject: (subjectId: string) => Promise<void>;
   onAddExistingToMonth: (subjectId: string, month: string) => Promise<void>;
+  onUpdateSubject?: (subjectId: string, data: UpdateSubjectPayload) => Promise<void>;
   onUpdateSubjectTotal?: (subjectId: string, newTotal: number) => Promise<void>;
 }
 
@@ -97,6 +100,7 @@ export function MonthlySubjectsCard({
   onRemoveFromMonth,
   onDeleteSubject,
   onAddExistingToMonth,
+  onUpdateSubject,
   onUpdateSubjectTotal,
 }: MonthlySubjectsCardProps) {
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
@@ -310,7 +314,8 @@ export function MonthlySubjectsCard({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className={`relative group rounded-2xl border-2 transition-all p-3.5 sm:p-3 shadow-xs ${theme.bg} ${theme.border} sm:bg-white sm:border-zinc-200/80 sm:hover:border-zinc-300 sm:hover:bg-zinc-50/60 sm:shadow-none flex flex-col justify-between`}
+                    onClick={() => setEditingSubject(subject)}
+                    className={`relative group rounded-2xl border-2 transition-all p-3.5 sm:p-3 shadow-xs ${theme.bg} ${theme.border} sm:bg-white sm:border-zinc-200/80 sm:hover:border-zinc-400 sm:hover:bg-zinc-50/60 sm:shadow-xs flex flex-col justify-between cursor-pointer`}
                   >
                     {/* ========================================================================= */}
                     {/* MOBILE VIEW (< sm) - Matches Uploaded Mobile Mockup                       */}
@@ -358,11 +363,22 @@ export function MonthlySubjectsCard({
                               )}
                             </div>
 
+                            {/* Teacher name if assigned */}
+                            {subject.teacher && (
+                              <div className="flex items-center gap-1 text-[11px] font-semibold text-zinc-600">
+                                <GraduationCap className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                <span className="truncate max-w-[130px]">{subject.teacher}</span>
+                              </div>
+                            )}
+
                             {/* Urgent Badge / Toggle */}
                             <div>
                               {isUrgent ? (
                                 <button
-                                  onClick={() => onToggleUrgent(subject.id, monthId, true)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onToggleUrgent(subject.id, monthId, true);
+                                  }}
                                   className="px-2.5 py-0.5 rounded-full bg-rose-100/90 border border-rose-200 text-[11px] font-bold text-rose-600 inline-flex items-center gap-1 hover:bg-rose-200 transition-colors cursor-pointer"
                                   title="Urgent: must complete this month. Click to toggle."
                                 >
@@ -371,7 +387,10 @@ export function MonthlySubjectsCard({
                                 </button>
                               ) : (
                                 <button
-                                  onClick={() => onToggleUrgent(subject.id, monthId, false)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onToggleUrgent(subject.id, monthId, false);
+                                  }}
                                   className="px-2.5 py-0.5 rounded-full bg-slate-100/90 border border-slate-200 text-[11px] font-semibold text-slate-600 inline-flex items-center gap-1 hover:bg-slate-200 transition-colors cursor-pointer"
                                   title="Click to mark as Urgent"
                                 >
@@ -385,9 +404,15 @@ export function MonthlySubjectsCard({
                         {/* Right: Stepper Counter + 3-Dots Menu */}
                         <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
                           {/* Stepper Pill */}
-                          <div className="flex items-center rounded-full border-2 border-zinc-800 bg-white shadow-xs px-2.5 py-0.5 h-8 gap-2.5">
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex items-center rounded-full border-2 border-zinc-800 bg-white shadow-xs px-2.5 py-0.5 h-8 gap-2.5"
+                          >
                             <button
-                              onClick={() => handleDecrement(subject)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDecrement(subject);
+                              }}
                               disabled={subject.completed_lectures <= 0 || loadingSubjectId === subject.id}
                               className="w-5 h-5 flex items-center justify-center text-zinc-800 hover:text-zinc-950 active:scale-90 disabled:opacity-30 transition-transform cursor-pointer font-bold"
                               title="Decrement 1 lecture"
@@ -400,7 +425,10 @@ export function MonthlySubjectsCard({
                               {subject.completed_lectures}
                             </div>
                             <button
-                              onClick={() => handleIncrement(subject)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleIncrement(subject);
+                              }}
                               disabled={
                                 subject.completed_lectures >= subject.total_lectures ||
                                 loadingSubjectId === subject.id
@@ -415,9 +443,10 @@ export function MonthlySubjectsCard({
                           {/* 3-Dots Menu */}
                           <div className="relative" data-subject-menu={subject.id}>
                             <button
-                              onClick={() =>
-                                setActiveMenuId(activeMenuId === subject.id ? null : subject.id)
-                              }
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveMenuId(activeMenuId === subject.id ? null : subject.id);
+                              }}
                               className="w-7 h-7 rounded-full hover:bg-zinc-200/60 flex items-center justify-center text-zinc-700 cursor-pointer"
                               title="Subject options"
                             >
@@ -430,10 +459,12 @@ export function MonthlySubjectsCard({
                                   initial={{ opacity: 0, scale: 0.95 }}
                                   animate={{ opacity: 1, scale: 1 }}
                                   exit={{ opacity: 0, scale: 0.95 }}
+                                  onClick={(e) => e.stopPropagation()}
                                   className="absolute right-0 top-8 z-30 w-44 rounded-2xl bg-white border-2 border-zinc-800 p-1.5 shadow-xl"
                                 >
                                   <button
-                                    onClick={async () => {
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
                                       setActiveMenuId(null);
                                       await onToggleUrgent(subject.id, monthId, isUrgent);
                                     }}
@@ -444,18 +475,20 @@ export function MonthlySubjectsCard({
                                   </button>
 
                                   <button
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                      e.stopPropagation();
                                       setActiveMenuId(null);
                                       setEditingSubject(subject);
                                     }}
                                     className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-800 hover:bg-zinc-100 flex items-center gap-2 cursor-pointer"
                                   >
                                     <Edit3 className="w-3.5 h-3.5 text-zinc-600" />
-                                    <span>Edit Total Lectures</span>
+                                    <span>Edit Subject Details</span>
                                   </button>
 
                                   <button
-                                    onClick={async () => {
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
                                       setActiveMenuId(null);
                                       await onRemoveFromMonth(subject.id, monthId);
                                     }}
@@ -468,7 +501,8 @@ export function MonthlySubjectsCard({
                                   <div className="my-1 border-t border-zinc-200" />
 
                                   <button
-                                    onClick={async () => {
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
                                       setActiveMenuId(null);
                                       if (confirm(`Delete "${subject.title}" completely?`)) {
                                         await onDeleteSubject(subject.id);
@@ -500,16 +534,14 @@ export function MonthlySubjectsCard({
 
                       {/* Bottom Row: Lectures Count & Percentage Pill */}
                       <div className="flex items-center justify-between text-xs font-bold text-zinc-800 font-display pt-0.5">
-                        <button
-                          onClick={() => setEditingSubject(subject)}
-                          className="hover:underline flex items-center gap-1.5 group/edit cursor-pointer text-left"
-                          title="Click to edit total lectures"
+                        <div
+                          className="flex items-center gap-1.5 group/edit text-left text-zinc-700"
                         >
                           <span>
                             {subject.completed_lectures} / {subject.total_lectures} lectures
                           </span>
                           <Edit3 className="w-3 h-3 text-zinc-400 group-hover/edit:text-zinc-700 transition-colors" />
-                        </button>
+                        </div>
                         <span
                           className={`px-2.5 py-0.5 rounded-md font-black text-xs ${theme.badge}`}
                         >
@@ -522,7 +554,7 @@ export function MonthlySubjectsCard({
                     {/* DESKTOP VIEW (sm:+) - Preserved Original Mockup Layout                    */}
                     {/* ========================================================================= */}
                     <div className="hidden sm:flex sm:items-center justify-between gap-4 w-full">
-                      {/* Left: Icon + Title + Urgent badge */}
+                      {/* Left: Icon + Title + Teacher + Urgent badge */}
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center shrink-0">
                           {renderIcon(subject.icon)}
@@ -530,7 +562,7 @@ export function MonthlySubjectsCard({
 
                         <div className="flex flex-col gap-0.5 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span className="font-bold text-base text-zinc-900 font-display truncate max-w-[220px]">
+                            <span className="font-bold text-base text-zinc-900 font-display truncate max-w-[200px]">
                               {subject.title}
                             </span>
                             {isComplete && (
@@ -538,10 +570,20 @@ export function MonthlySubjectsCard({
                             )}
                           </div>
 
-                          <div className="flex items-center gap-1.5">
+                          {subject.teacher && (
+                            <div className="flex items-center gap-1 text-xs font-semibold text-zinc-600">
+                              <GraduationCap className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                              <span className="truncate max-w-[200px]">{subject.teacher}</span>
+                            </div>
+                          )}
+
+                          <div className="flex items-center gap-1.5 pt-0.5">
                             {isUrgent ? (
                               <button
-                                onClick={() => onToggleUrgent(subject.id, monthId, true)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onToggleUrgent(subject.id, monthId, true);
+                                }}
                                 className="px-2 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-[11px] font-bold text-rose-700 flex items-center gap-1 hover:bg-rose-100 transition-colors cursor-pointer"
                                 title="Urgent: must complete this month. Click to toggle."
                               >
@@ -550,7 +592,10 @@ export function MonthlySubjectsCard({
                               </button>
                             ) : (
                               <button
-                                onClick={() => onToggleUrgent(subject.id, monthId, false)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onToggleUrgent(subject.id, monthId, false);
+                                }}
                                 className="px-2 py-0.5 rounded-full bg-zinc-100 text-[11px] font-semibold text-zinc-500 hover:text-zinc-800 hover:bg-zinc-200 transition-colors cursor-pointer"
                                 title="Click to mark as Urgent"
                               >
@@ -575,16 +620,14 @@ export function MonthlySubjectsCard({
                         </div>
 
                         <div className="flex items-center justify-end gap-2 text-sm font-semibold text-zinc-600 font-display shrink-0">
-                          <button
-                            onClick={() => setEditingSubject(subject)}
-                            className="flex items-center gap-1 hover:underline cursor-pointer group/edit text-zinc-700 hover:text-zinc-950"
-                            title="Click to edit total lectures"
+                          <div
+                            className="flex items-center gap-1 group/edit text-zinc-700"
                           >
                             <span>
                               {subject.completed_lectures} / {subject.total_lectures}
                             </span>
                             <Edit3 className="w-3 h-3 text-zinc-400 group-hover/edit:text-zinc-700 transition-colors" />
-                          </button>
+                          </div>
                           <span className="font-bold text-zinc-900">
                             {percent}%
                           </span>
@@ -593,9 +636,15 @@ export function MonthlySubjectsCard({
 
                       {/* Right: Stepper Counter Controls & Actions */}
                       <div className="flex items-center justify-end gap-2 shrink-0">
-                        <div className="flex items-center rounded-full border-2 border-zinc-800 bg-white shadow-xs overflow-hidden">
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex items-center rounded-full border-2 border-zinc-800 bg-white shadow-xs overflow-hidden"
+                        >
                           <button
-                            onClick={() => handleDecrement(subject)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDecrement(subject);
+                            }}
                             disabled={subject.completed_lectures <= 0 || loadingSubjectId === subject.id}
                             className="w-8 h-8 flex items-center justify-center text-zinc-700 hover:bg-zinc-100 active:bg-zinc-200 disabled:opacity-30 transition-colors cursor-pointer"
                             title="Decrement 1 lecture"
@@ -606,7 +655,10 @@ export function MonthlySubjectsCard({
                             {subject.completed_lectures}
                           </div>
                           <button
-                            onClick={() => handleIncrement(subject)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleIncrement(subject);
+                            }}
                             disabled={
                               subject.completed_lectures >= subject.total_lectures ||
                               loadingSubjectId === subject.id
@@ -621,9 +673,10 @@ export function MonthlySubjectsCard({
                         {/* Desktop Dropdown Options Menu */}
                         <div className="relative" data-subject-menu={subject.id}>
                           <button
-                            onClick={() =>
-                              setActiveMenuId(activeMenuId === subject.id ? null : subject.id)
-                            }
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveMenuId(activeMenuId === subject.id ? null : subject.id);
+                            }}
                             className="w-8 h-8 rounded-full hover:bg-zinc-100 flex items-center justify-center text-zinc-500 hover:text-zinc-800 transition-colors cursor-pointer"
                             title="Subject options"
                           >
@@ -636,10 +689,12 @@ export function MonthlySubjectsCard({
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
+                                onClick={(e) => e.stopPropagation()}
                                 className="absolute right-0 top-9 z-30 w-44 rounded-2xl bg-white border-2 border-zinc-800 p-1.5 shadow-xl"
                               >
                                 <button
-                                  onClick={async () => {
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
                                     setActiveMenuId(null);
                                     await onToggleUrgent(subject.id, monthId, isUrgent);
                                   }}
@@ -650,18 +705,20 @@ export function MonthlySubjectsCard({
                                 </button>
 
                                 <button
-                                  onClick={() => {
+                                  onClick={(e) => {
+                                    e.stopPropagation();
                                     setActiveMenuId(null);
                                     setEditingSubject(subject);
                                   }}
                                   className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-800 hover:bg-zinc-100 flex items-center gap-2 cursor-pointer"
                                 >
                                   <Edit3 className="w-3.5 h-3.5 text-zinc-600" />
-                                  <span>Edit Total Lectures</span>
+                                  <span>Edit Subject Details</span>
                                 </button>
 
                                 <button
-                                  onClick={async () => {
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
                                     setActiveMenuId(null);
                                     await onRemoveFromMonth(subject.id, monthId);
                                   }}
@@ -674,7 +731,8 @@ export function MonthlySubjectsCard({
                                 <div className="my-1 border-t border-zinc-200" />
 
                                 <button
-                                  onClick={async () => {
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
                                     setActiveMenuId(null);
                                     if (confirm(`Delete "${subject.title}" completely?`)) {
                                       await onDeleteSubject(subject.id);
@@ -699,14 +757,16 @@ export function MonthlySubjectsCard({
         </div>
       </div>
 
-      {/* Edit Subject Total Lectures Modal */}
+      {/* Edit Subject Details Modal */}
       <EditSubjectModal
         isOpen={Boolean(editingSubject)}
         subject={editingSubject}
         onClose={() => setEditingSubject(null)}
-        onSave={async (subjectId, newTotal) => {
-          if (onUpdateSubjectTotal) {
-            await onUpdateSubjectTotal(subjectId, newTotal);
+        onSave={async (subjectId, data) => {
+          if (onUpdateSubject) {
+            await onUpdateSubject(subjectId, data);
+          } else if (onUpdateSubjectTotal) {
+            await onUpdateSubjectTotal(subjectId, data.totalLectures);
           }
         }}
       />

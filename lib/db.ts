@@ -25,12 +25,17 @@ export async function ensureDbSchema() {
       total_lectures INTEGER NOT NULL DEFAULT 30,
       completed_lectures INTEGER NOT NULL DEFAULT 0,
       is_completed BOOLEAN NOT NULL DEFAULT FALSE,
+      teacher TEXT DEFAULT '',
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
   `;
 
   await sql`
     ALTER TABLE subjects ADD COLUMN IF NOT EXISTS is_completed BOOLEAN NOT NULL DEFAULT FALSE;
+  `;
+
+  await sql`
+    ALTER TABLE subjects ADD COLUMN IF NOT EXISTS teacher TEXT DEFAULT '';
   `;
 
   await sql`
