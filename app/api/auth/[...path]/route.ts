@@ -1,5 +1,7 @@
 import dns from "node:dns";
-dns.setDefaultResultOrder("ipv4first");
+if (dns && typeof dns.setDefaultResultOrder === "function") {
+  dns.setDefaultResultOrder("ipv4first");
+}
 
 import { auth } from "@/lib/auth/server";
 

@@ -5,11 +5,11 @@ if (dns && typeof dns.setDefaultResultOrder === "function") {
 
 import { neon } from "@neondatabase/serverless";
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL environment variable is missing");
-}
+const dbUrl =
+  process.env.DATABASE_URL ||
+  "postgres://placeholder:placeholder@localhost:5432/placeholder";
 
-export const sql = neon(process.env.DATABASE_URL);
+export const sql = neon(dbUrl);
 
 let initialized = false;
 
